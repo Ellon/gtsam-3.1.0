@@ -126,13 +126,13 @@ namespace std {
         void pop_back();*/
     };
     //typedef std::vector
-  
+
     #include<list>
     template<T>
     class list
     {
-    
-    
+
+
     };
 
 }
@@ -837,6 +837,66 @@ virtual class StereoCamera : gtsam::Value {
   void serialize() const;
 };
 
+#include <gtsam/geometry/ParallaxAnglePoint2.h>
+virtual class ParallaxAnglePoint2 : gtsam::Value {
+  // Standard Constructors
+  ParallaxAnglePoint2();
+  ParallaxAnglePoint2(double yaw, double pitch);
+  ParallaxAnglePoint2(Vector v);
+
+  // Testable
+  void print(string s) const;
+  bool equals(const gtsam::ParallaxAnglePoint2& pose, double tol) const;
+
+  // Manifold
+  static size_t Dim();
+  size_t dim() const;
+  gtsam::ParallaxAnglePoint2 retract(Vector v) const;
+  Vector localCoordinates(const gtsam::ParallaxAnglePoint2& p) const;
+
+  // Standard Interface
+  double yaw() const;
+  double pitch() const;
+  Vector vector() const;
+
+  Vector directionVector() const;
+
+  // enabling serialization functionality
+  void serialize() const;
+};
+
+#include <gtsam/geometry/ParallaxAnglePoint3.h>
+virtual class ParallaxAnglePoint3 : gtsam::Value {
+  // Standard Constructors
+  ParallaxAnglePoint3();
+  ParallaxAnglePoint3(double yaw, double pitch, double parallax);
+  ParallaxAnglePoint3(Vector v);
+
+  // Testable
+  void print(string s) const;
+  bool equals(const gtsam::ParallaxAnglePoint3& pose, double tol) const;
+
+  // Manifold
+  static size_t Dim();
+  size_t dim() const;
+  gtsam::ParallaxAnglePoint3 retract(Vector v) const;
+  Vector localCoordinates(const gtsam::ParallaxAnglePoint3& p) const;
+
+  // Standard Interface
+  double yaw() const;
+  double pitch() const;
+  double parallax() const;
+  Vector vector() const;
+
+  Vector directionVectorFromMainAnchor() const;
+  Vector directionVectorFromAssoAnchor(const gtsam::Point3& mainAnchor, const gtsam::Point3& assoAnchor) const;
+  Vector directionVectorFromOtheAnchor(const gtsam::Point3& mainAnchor, const gtsam::Point3& assoAnchor, const gtsam::Point3& otheAnchor) const;
+
+  // enabling serialization functionality
+  void serialize() const;
+};
+
+
 //*************************************************************************
 // Symbolic
 //*************************************************************************
@@ -964,7 +1024,7 @@ class SymbolicBayesTree {
     void clear();
     void deleteCachedShortcuts();
     size_t numCachedSeparatorMarginals() const;
-  
+
   gtsam::SymbolicConditional* marginalFactor(size_t key) const;
   gtsam::SymbolicFactorGraph* joint(size_t key1, size_t key2) const;
   gtsam::SymbolicBayesNet* jointBayesNet(size_t key1, size_t key2) const;
@@ -974,19 +1034,19 @@ class SymbolicBayesTree {
 //   BayesTreeClique();
 //   BayesTreeClique(CONDITIONAL* conditional);
 // //  BayesTreeClique(const std::pair<typename ConditionalType::shared_ptr, typename ConditionalType::FactorType::shared_ptr>& result) : Base(result) {}
-// 
+//
 //   bool equals(const This& other, double tol) const;
 //   void print(string s) const;
 //   void printTree() const; // Default indent of ""
 //   void printTree(string indent) const;
 //   size_t numCachedSeparatorMarginals() const;
-// 
+//
 //   CONDITIONAL* conditional() const;
 //   bool isRoot() const;
 //   size_t treeSize() const;
 // //  const std::list<derived_ptr>& children() const { return children_; }
 // //  derived_ptr parent() const { return parent_.lock(); }
-// 
+//
 //   // FIXME: need wrapped versions graphs, BayesNet
 // //  BayesNet<ConditionalType> shortcut(derived_ptr root, Eliminate function) const;
 // //  FactorGraph<FactorType> marginal(derived_ptr root, Eliminate function) const;
@@ -1239,7 +1299,7 @@ virtual class JacobianFactor : gtsam::GaussianFactor {
 
   void transposeMultiplyAdd(double alpha, const Vector& e, gtsam::VectorValues& x) const;
   gtsam::JacobianFactor whiten() const;
-  
+
   pair<gtsam::GaussianConditional*, gtsam::JacobianFactor*> eliminate(const gtsam::Ordering& keys) const;
 
   void setModel(bool anyConstrained, const Vector& sigmas);
@@ -1316,7 +1376,7 @@ class GaussianFactorGraph {
   gtsam::GaussianFactorGraph clone() const;
   gtsam::GaussianFactorGraph negate() const;
 
-  // Optimizing and linear algebra  
+  // Optimizing and linear algebra
   gtsam::VectorValues optimize() const;
   gtsam::VectorValues optimize(const gtsam::Ordering& ordering) const;
   gtsam::VectorValues optimizeGradientSearch() const;
@@ -1405,7 +1465,7 @@ virtual class GaussianBayesNet {
     //Constructors
   GaussianBayesNet();
   GaussianBayesNet(const gtsam::GaussianConditional* conditional);
-  
+
   // Testable
   void print(string s) const;
   bool equals(const gtsam::GaussianBayesNet& other, double tol) const;
@@ -1421,7 +1481,7 @@ virtual class GaussianBayesNet {
   gtsam::GaussianConditional* back() const;
   void push_back(gtsam::GaussianConditional* conditional);
   void push_back(const gtsam::GaussianBayesNet& bayesNet);
-  
+
   gtsam::VectorValues optimize() const;
   gtsam::VectorValues optimize(gtsam::VectorValues& solutionForMissing) const;
   gtsam::VectorValues optimizeGradientSearch() const;
@@ -1445,7 +1505,7 @@ virtual class GaussianBayesTree {
   bool empty() const;
   size_t numCachedSeparatorMarginals() const;
   void saveGraph(string s) const;
-  
+
   gtsam::VectorValues optimize() const;
   gtsam::VectorValues optimizeGradientSearch() const;
   gtsam::VectorValues gradient(const gtsam::VectorValues& x0) const;
@@ -1852,7 +1912,7 @@ virtual class NonlinearOptimizerParams {
   void setVerbosity(string s);
 
   string getLinearSolverType() const;
-  
+
   void setLinearSolverType(string solver);
   void setOrdering(const gtsam::Ordering& ordering);
   void setIterativeParams(const gtsam::SubgraphSolverParameters &params);
@@ -2179,6 +2239,81 @@ virtual class GenericProjectionFactor : gtsam::NoiseModelFactor {
 };
 typedef gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2> GenericProjectionFactorCal3_S2;
 typedef gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3DS2> GenericProjectionFactorCal3DS2;
+
+#include <gtsam/slam/ParallaxAngleProjectionFactor.h>
+template<POSE, LANDMARK, CALIBRATION>
+virtual class ParallaxAngleSingleAnchorProjectionFactor : gtsam::NoiseModelFactor {
+  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k);
+  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, const POSE& body_P_sensor);
+
+  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality);
+  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
+      const POSE& body_P_sensor);
+
+  gtsam::Point2 measured() const;
+  CALIBRATION* calibration() const;
+  bool verboseCheirality() const;
+  bool throwCheirality() const;
+
+  // enabling serialization functionality
+  void serialize() const;
+};
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3_S2> PASingleAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3DS2> PASingleAnchorProjectionFactorCal3DS2;
+
+
+template<POSE, LANDMARK, CALIBRATION>
+virtual class ParallaxAngleOnlyAnchorsProjectionFactor : gtsam::NoiseModelFactor {
+  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k);
+  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, const POSE& body_P_sensor);
+
+  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality);
+  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
+      const POSE& body_P_sensor);
+
+  gtsam::Point2 measured() const;
+  CALIBRATION* calibration() const;
+  bool verboseCheirality() const;
+  bool throwCheirality() const;
+
+  // enabling serialization functionality
+  void serialize() const;
+};
+typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAOnlyAnchorsProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAOnlyAnchorsProjectionFactorCal3DS2;
+
+
+template<POSE, LANDMARK, CALIBRATION>
+virtual class ParallaxAngleProjectionFactor : gtsam::NoiseModelFactor {
+  ParallaxAngleProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t associatedAnchorKey, size_t otherAnchorKey, size_t pointKey, const CALIBRATION* k);
+  ParallaxAngleProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+    size_t mainAnchorKey, size_t associatedAnchorKey, size_t otherAnchorKey, size_t pointKey, const CALIBRATION* k, const POSE& body_P_sensor);
+
+  ParallaxAngleProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t associatedAnchorKey, size_t otherAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality);
+  ParallaxAngleProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+      size_t mainAnchorKey, size_t associatedAnchorKey, size_t otherAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
+      const POSE& body_P_sensor);
+
+  gtsam::Point2 measured() const;
+  CALIBRATION* calibration() const;
+  bool verboseCheirality() const;
+  bool throwCheirality() const;
+
+  // enabling serialization functionality
+  void serialize() const;
+};
+typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAProjectionFactorCal3DS2;
 
 
 #include <gtsam/slam/GeneralSFMFactor.h>
