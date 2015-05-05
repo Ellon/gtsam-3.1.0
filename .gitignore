@@ -1,0 +1,9 @@
+# Temporary files
+*~
+
+# C/C++
+*.so
+
+# Build and Debug dirs
+build/
+debug/
