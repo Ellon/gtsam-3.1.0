@@ -56,7 +56,7 @@ ParallaxAnglePoint3 ParallaxAnglePoint3::operator-(const ParallaxAnglePoint3& q)
 
 /* ************************************************************************* */
 ostream &operator<<(ostream &os, const ParallaxAnglePoint3& p) {
-  os << '[' << p.yaw() << ", " << p.pitch() << ", " << p.parallax() << "]\';";
+  os << '(' << p.yaw() << ", " << p.pitch() << ", " << p.parallax() << ')';
   return os;
 }
 

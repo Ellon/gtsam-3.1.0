@@ -58,7 +58,7 @@ Vector3 ParallaxAnglePoint2::directionVector(boost::optional<gtsam::Matrix&> H) 
 
 /* ************************************************************************* */
 ostream &operator<<(ostream &os, const ParallaxAnglePoint2& p) {
-  os << '[' << p.yaw() << ", " << p.pitch() << "]\';";
+  os << '(' << p.yaw() << ", " << p.pitch() << ')';
   return os;
 }
 

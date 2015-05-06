@@ -67,7 +67,7 @@ namespace gtsam {
         throw std::invalid_argument("ParallaxAnglePoint3 constructor from Vector requires that the Vector have dimension 3");
       yaw_ = v(0);
       pitch_ = v(1);
-      parallax_ = v(3);
+      parallax_ = v(2);
     }
 
     /// @}
