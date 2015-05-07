@@ -244,6 +244,120 @@ namespace gtsam {
       return ones(2) * 2.0 * K_->fx();
     }
 
+        /// Evaluate error h(x)-z and optionally derivatives
+    Vector evaluateError(const Pose3& mainPose, const ParallaxAnglePoint3& point,
+        boost::optional<Matrix&> Dmain  = boost::none,
+        boost::optional<Matrix&> Dpoint = boost::none) const {
+      try {
+        // Test if we need jacobians
+        if (!Dmain && !Dpoint)
+        {
+          if(body_P_sensor_)
+          {
+            // Get the main and associated anchors, and the camera pose
+            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_) );
+
+            // Get the direction to the point from observation point
+            Point3 obs_T_point( point.directionVectorFromMainAnchor() );
+
+            // Put a camera at the origin
+            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
+
+            // Project direction vector to camera and calculate the error
+            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
+            return reprojectionError.vector();
+          }
+          else
+          {
+            // Get the direction to the point from observation point
+            Point3 obs_T_point( point.directionVectorFromMainAnchor() );
+
+            // Put a camera at the origin
+            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+
+            // Project direction vector to camera and calculate the error
+            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
+            return reprojectionError.vector();
+          }
+        }
+
+        // Same computation but with jacobians
+        if(body_P_sensor_)
+        {
+            // Get the main and associated anchors, and the camera pose
+            gtsam::Matrix MAINANCHORPOSE_mainpose;
+            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_, MAINANCHORPOSE_mainpose) );
+
+            // Get the direction to the point from observation point
+            Matrix OBS_T_POINT_point;
+            Point3 obs_T_point(point.directionVectorFromMainAnchor( OBS_T_POINT_point ));
+
+            // Put a camera at the origin
+            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
+
+            // Project direction vector to camera and calculate the error
+            Matrix PROJ_mainanchorori, PROJ_obs_t_point;
+            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainanchorori, PROJ_obs_t_point) - measured_);
+
+            // Chain of jacobians
+          if(Dmain)
+          {
+            Matrix PROJ_mainanchorpose(2,6);
+            PROJ_mainanchorpose << PROJ_mainanchorori.block(0,0,2,3), zeros(2,3);
+            Dmain->resize(2,6);
+            *Dmain << (PROJ_mainanchorpose * MAINANCHORPOSE_mainpose);
+          }
+          if(Dpoint)
+          {
+            Dpoint->resize(2,3);
+            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+          }
+
+          return reprojectionError.vector();
+
+        }
+        else
+        {
+            // Get the direction to the point from observation point
+            Matrix OBS_T_POINT_point;
+            Point3 obs_T_point(point.directionVectorFromMainAnchor( OBS_T_POINT_point ));
+
+            // Put a camera at the origin
+            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+
+            // Project direction vector to camera and calculate the error
+            Matrix PROJ_mainori, PROJ_obs_t_point;
+            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainori, PROJ_obs_t_point) - measured_);
+
+            // Chain of jacobians
+          if(Dmain)
+          {
+            Dmain->resize(2,6);
+            *Dmain << PROJ_mainori.block(0,0,2,3), zeros(2,3);
+          }
+          if(Dpoint)
+          {
+            Dpoint->resize(2,3);
+            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+          }
+
+          return reprojectionError.vector();
+        }
+      } catch( CheiralityException& e)
+      {
+        if (Dmain )  *Dmain  = zeros(2,6);
+        if (Dpoint)  *Dpoint = zeros(2,3);
+        if (verboseCheirality_)
+          std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key2()) <<
+              " with single anchor (" << DefaultKeyFormatter(this->key1()) << ")" <<
+              " moved behind camera " << std::endl;
+        if (throwCheirality_)
+          throw e;
+      }
+      return ones(2) * 2.0 * K_->fx();
+    }
+
+
     /** return the measurement */
     const Point2& measured() const {
       return measured_;

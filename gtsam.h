@@ -2262,8 +2262,10 @@ virtual class ParallaxAngleSingleAnchorProjectionFactor : gtsam::NoiseModelFacto
   // enabling serialization functionality
   void serialize() const;
 };
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3_S2> PASingleAnchorProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3DS2> PASingleAnchorProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3_S2> PAPoint2SingleAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3DS2> PAPoint2SingleAnchorProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3SingleAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3SingleAnchorProjectionFactorCal3DS2;
 
 
 template<POSE, LANDMARK, CALIBRATION>
@@ -2287,8 +2289,8 @@ virtual class ParallaxAngleOnlyAnchorsProjectionFactor : gtsam::NoiseModelFactor
   // enabling serialization functionality
   void serialize() const;
 };
-typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAOnlyAnchorsProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAOnlyAnchorsProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3OnlyAnchorsProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3OnlyAnchorsProjectionFactorCal3DS2;
 
 
 template<POSE, LANDMARK, CALIBRATION>
@@ -2312,8 +2314,8 @@ virtual class ParallaxAngleProjectionFactor : gtsam::NoiseModelFactor {
   // enabling serialization functionality
   void serialize() const;
 };
-typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3ProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3ProjectionFactorCal3DS2;
 
 
 #include <gtsam/slam/GeneralSFMFactor.h>
