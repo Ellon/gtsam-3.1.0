@@ -22,6 +22,10 @@
 #include <gtsam/base/Matrix.h>
 #include <gtsam/base/DerivedValue.h>
 #include <gtsam/base/Lie.h>
+#include <gtsam/geometry/Point2.h>
+#include <gtsam/geometry/Point3.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/PinholeCamera.h>
 
 #include <boost/serialization/nvp.hpp>
 
@@ -64,6 +68,39 @@ namespace gtsam {
         throw std::invalid_argument("ParallaxAnglePoint2 constructor from Vector requires that the Vector have dimension 2");
       yaw_ = v(0);
       pitch_ = v(1);
+    }
+
+    /// Construct from camera and measurement
+    template<class PinholeCameraType>
+    static ParallaxAnglePoint2 FromCameraAndMeasurement(const PinholeCameraType &camera, const Point2 &measurement)
+    {
+      Point3 vecFromMain = camera.backproject(measurement, 1.0);
+      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
+      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
+
+      return ParallaxAnglePoint2(yaw,pitch);
+    }
+
+    /// Construct from pose, body to sensor pose and camera calibration
+    template<class CalibrationType>
+    static ParallaxAnglePoint2 FromPoseMeasurementAndCalibration(const Pose3 &pose, const Point2 &measurement, const CalibrationType& K, boost::optional<Pose3> body_P_sensor = boost::none)
+    {
+      boost::shared_ptr<PinholeCamera<CalibrationType> > camera_ptr;
+
+      if(body_P_sensor)
+      {
+        camera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(pose.compose(*body_P_sensor), K);
+      }
+      else
+      {
+        camera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(pose, K);
+      }
+
+      Point3 vecFromMain = camera_ptr->backproject(measurement, 1.0);
+      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
+      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
+
+      return ParallaxAnglePoint2(yaw,pitch);
     }
 
     /// @}

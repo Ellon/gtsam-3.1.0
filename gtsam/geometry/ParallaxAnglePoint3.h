@@ -24,6 +24,9 @@
 #include <gtsam/base/Lie.h>
 
 #include <gtsam/geometry/Point3.h>
+#include <gtsam/geometry/Point3.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/PinholeCamera.h>
 
 #include <boost/serialization/nvp.hpp>
 
@@ -69,6 +72,57 @@ namespace gtsam {
       pitch_ = v(1);
       parallax_ = v(2);
     }
+
+    /// Construct from main and associated cameras and respective measurements
+    template<class PinholeCameraType>
+    static ParallaxAnglePoint3 FromCamerasAndMeasurements(
+      const PinholeCameraType &mainCamera, const Point2 &measurementFromMain,
+      const PinholeCameraType &assoCamera, const Point2 &measurementFromAsso)
+    {
+      Point3 pointFromMain = mainCamera.backproject(measurementFromMain, 1.0);
+      Point3 pointFromAsso = assoCamera.backproject(measurementFromAsso, 1.0);
+
+      double yaw   = atan2(pointFromMain.y(),pointFromMain.x());
+      double pitch = atan2(pointFromMain.z(),Point2(pointFromMain.x(),pointFromMain.y()).norm());
+      double parallax = acos(pointFromMain.dot(pointFromAsso)/(pointFromMain.norm()*pointFromAsso.norm()));
+
+      return ParallaxAnglePoint3(yaw,pitch,parallax);
+    }
+
+    /// Construct from main and associated poses, together with respective measurements, camera calibration and body to sensor pose
+    template<class CalibrationType>
+    static ParallaxAnglePoint3 FromPosesMeasurementsAndCalibration(
+      const Pose3 &mainPose, const Point2 &measurementFromMain,
+      const Pose3 &assoPose, const Point2 &measurementFromAsso,
+      const CalibrationType& K, boost::optional<Pose3> body_P_sensor = boost::none)
+    {
+      boost::shared_ptr<PinholeCamera<CalibrationType> > mainCamera_ptr;
+      boost::shared_ptr<PinholeCamera<CalibrationType> > assoCamera_ptr;
+
+      if(body_P_sensor)
+      {
+        mainCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(mainPose.compose(*body_P_sensor), K);
+        assoCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(assoPose.compose(*body_P_sensor), K);
+      }
+      else
+      {
+        mainCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(mainPose, K);
+        assoCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(assoPose, K);
+      }
+
+      Point3 vecFromMain = mainCamera_ptr->backproject(measurementFromMain, 1.0);
+      Point3 vecFromAsso = assoCamera_ptr->backproject(measurementFromAsso, 1.0);
+
+      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
+      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
+      double parallax = acos(vecFromMain.dot(vecFromAsso)/(vecFromMain.norm()*vecFromAsso.norm()));
+
+      return ParallaxAnglePoint3(yaw,pitch,parallax);
+    }
+
+    static ParallaxAnglePoint3 FromParallaxAnglePointAndAnchors(const ParallaxAnglePoint3 &oldPoint,
+                        const Point3 &oldMainAnchor, const Point3 &oldAssoAnchor,
+                        const Point3 &newMainAnchor, const Point3 &newAssoAnchor);
 
     /// @}
     /// @name Testable

@@ -29,6 +29,22 @@ double norm(gtsam::Vector3 v, boost::optional<gtsam::Matrix&> Dv = boost::none);
 
 namespace gtsam {
 /* ************************************************************************* */
+ParallaxAnglePoint3 ParallaxAnglePoint3::FromParallaxAnglePointAndAnchors(
+  const ParallaxAnglePoint3 &oldPoint,
+  const Point3 &oldMainAnchor, const Point3 &oldAssoAnchor,
+  const Point3 &newMainAnchor, const Point3 &newAssoAnchor)
+{
+  Vector3 vecFromNewMain(oldPoint.directionVectorFromOtheAnchor(oldMainAnchor, oldAssoAnchor, newMainAnchor));
+  Vector3 vecFromNewAsso(oldPoint.directionVectorFromOtheAnchor(oldMainAnchor, oldAssoAnchor, newAssoAnchor));
+
+  double yaw   = atan2(vecFromNewMain.y(),vecFromNewMain.x());
+  double pitch = atan2(vecFromNewMain.z(),Point2(vecFromNewMain.x(),vecFromNewMain.y()).norm());
+  double parallax = acos(vecFromNewMain.dot(vecFromNewAsso)/(vecFromNewMain.norm()*vecFromNewAsso.norm()));
+
+  return ParallaxAnglePoint3(yaw,pitch,parallax);
+}
+
+/* ************************************************************************* */
 void ParallaxAnglePoint3::print(const string& s) const {
   cout << s << *this << endl;
 }
