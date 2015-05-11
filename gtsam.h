@@ -844,6 +844,14 @@ virtual class ParallaxAnglePoint2 : gtsam::Value {
   ParallaxAnglePoint2(double yaw, double pitch);
   ParallaxAnglePoint2(Vector v);
 
+  // Static Constructors
+  static gtsam::ParallaxAnglePoint2 FromCameraAndMeasurement(const gtsam::SimpleCamera &camera, const gtsam::Point2 &measurement);
+  static gtsam::ParallaxAnglePoint2 FromCameraAndMeasurement(const gtsam::PinholeCameraCal3DS2 &camera, const gtsam::Point2 &measurement);
+  static gtsam::ParallaxAnglePoint2 FromPoseMeasurementAndCalibration(const gtsam::Pose3 &pose, const gtsam::Point2 &measurement, const gtsam::Cal3_S2& K, const gtsam::Pose3& body_P_sensor);
+  static gtsam::ParallaxAnglePoint2 FromPoseMeasurementAndCalibration(const gtsam::Pose3 &pose, const gtsam::Point2 &measurement, const gtsam::Cal3_S2& K);
+  static gtsam::ParallaxAnglePoint2 FromPoseMeasurementAndCalibration(const gtsam::Pose3 &pose, const gtsam::Point2 &measurement, const gtsam::Cal3DS2& K);
+  static gtsam::ParallaxAnglePoint2 FromPoseMeasurementAndCalibration(const gtsam::Pose3 &pose, const gtsam::Point2 &measurement, const gtsam::Cal3DS2& K, const gtsam::Pose3& body_P_sensor);
+
   // Testable
   void print(string s) const;
   bool equals(const gtsam::ParallaxAnglePoint2& pose, double tol) const;
@@ -871,6 +879,27 @@ virtual class ParallaxAnglePoint3 : gtsam::Value {
   ParallaxAnglePoint3();
   ParallaxAnglePoint3(double yaw, double pitch, double parallax);
   ParallaxAnglePoint3(Vector v);
+
+  // Static Constructors
+  static gtsam::ParallaxAnglePoint3 FromCamerasAndMeasurements( const gtsam::SimpleCamera &mainCamera, const gtsam::Point2 &measurementFromMain,
+                                                                const gtsam::SimpleCamera &assoCamera, const gtsam::Point2 &measurementFromAsso);
+  static gtsam::ParallaxAnglePoint3 FromCamerasAndMeasurements( const gtsam::PinholeCameraCal3DS2 &mainCamera, const gtsam::Point2 &measurementFromMain,
+                                                                const gtsam::PinholeCameraCal3DS2 &assoCamera, const gtsam::Point2 &measurementFromAsso);
+  static gtsam::ParallaxAnglePoint3 FromPosesMeasurementsAndCalibration( const gtsam::Pose3 &mainPose, const gtsam::Point2 &measurementFromMain,
+                                                                         const gtsam::Pose3 &assoPose, const gtsam::Point2 &measurementFromAsso,
+                                                                         const gtsam::Cal3_S2& K);
+  static gtsam::ParallaxAnglePoint3 FromPosesMeasurementsAndCalibration( const gtsam::Pose3 &mainPose, const gtsam::Point2 &measurementFromMain,
+                                                                         const gtsam::Pose3 &assoPose, const gtsam::Point2 &measurementFromAsso,
+                                                                         const gtsam::Cal3_S2& K,      const gtsam::Pose3 &body_P_sensor);
+  static gtsam::ParallaxAnglePoint3 FromPosesMeasurementsAndCalibration( const gtsam::Pose3 &mainPose, const gtsam::Point2 &measurementFromMain,
+                                                                         const gtsam::Pose3 &assoPose, const gtsam::Point2 &measurementFromAsso,
+                                                                         const gtsam::Cal3DS2& K);
+  static gtsam::ParallaxAnglePoint3 FromPosesMeasurementsAndCalibration( const gtsam::Pose3 &mainPose, const gtsam::Point2 &measurementFromMain,
+                                                                         const gtsam::Pose3 &assoPose, const gtsam::Point2 &measurementFromAsso,
+                                                                         const gtsam::Cal3DS2& K,      const gtsam::Pose3 &body_P_sensor);
+  static gtsam::ParallaxAnglePoint3 FromParallaxAnglePointAndAnchors( const gtsam::ParallaxAnglePoint3 &oldPoint,
+                                                                      const gtsam::Point3 &oldMainAnchor, const gtsam::Point3 &oldAssoAnchor,
+                                                                      const gtsam::Point3 &newMainAnchor, const gtsam::Point3 &newAssoAnchor);
 
   // Testable
   void print(string s) const;
