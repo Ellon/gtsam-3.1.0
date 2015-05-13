@@ -2106,6 +2106,7 @@ class ISAM2Result {
   size_t getVariablesRelinearized() const;
   size_t getVariablesReeliminated() const;
   size_t getCliques() const;
+  gtsam::KeyVector getNewFactorsIndices();
 };
 
 class ISAM2 {

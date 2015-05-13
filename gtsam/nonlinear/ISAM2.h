@@ -310,6 +310,10 @@ struct GTSAM_EXPORT ISAM2Result {
    */
   FastVector<size_t> newFactorsIndices;
 
+  /** Function to access newFactorIndices from Matlab toolbox
+   */
+  inline FastVector<size_t> getNewFactorsIndices() { return newFactorsIndices; }
+
   /** A struct holding detailed results, which must be enabled with
    * ISAM2Params::enableDetailedResults.
    */
@@ -610,7 +614,7 @@ public:
 
   /** prints out clique statistics */
   void printStats() const { getCliqueData().getStats().print(); }
-  
+
   /** Compute the gradient of the energy function, \f$ \nabla_{x=0} \left\Vert \Sigma^{-1} R x - d
    * \right\Vert^2 \f$, centered around zero. The gradient about zero is \f$ -R^T d \f$.  See also
    * gradient(const GaussianBayesNet&, const VectorValues&).
@@ -618,7 +622,7 @@ public:
    * @return A VectorValues storing the gradient.
    */
   VectorValues gradientAtZero() const;
-  
+
   /// @}
 
 protected:
