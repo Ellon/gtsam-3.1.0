@@ -74,7 +74,7 @@ namespace gtsam {
     template<class PinholeCameraType>
     static ParallaxAnglePoint2 FromCameraAndMeasurement(const PinholeCameraType &camera, const Point2 &measurement)
     {
-      Point3 vecFromMain = camera.backproject(measurement, 1.0);
+      Point3 vecFromMain = camera.backproject(measurement, 1.0) - camera.pose().translation();
       double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
       double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
 
@@ -96,7 +96,7 @@ namespace gtsam {
         camera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(pose, K);
       }
 
-      Point3 vecFromMain = camera_ptr->backproject(measurement, 1.0);
+      Point3 vecFromMain = camera_ptr->backproject(measurement, 1.0) - camera_ptr->pose().translation();
       double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
       double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
 

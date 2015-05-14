@@ -79,8 +79,8 @@ namespace gtsam {
       const PinholeCameraType &mainCamera, const Point2 &measurementFromMain,
       const PinholeCameraType &assoCamera, const Point2 &measurementFromAsso)
     {
-      Point3 pointFromMain = mainCamera.backproject(measurementFromMain, 1.0);
-      Point3 pointFromAsso = assoCamera.backproject(measurementFromAsso, 1.0);
+      Point3 pointFromMain = mainCamera.backproject(measurementFromMain, 1.0) - mainCamera.pose().translation();
+      Point3 pointFromAsso = assoCamera.backproject(measurementFromAsso, 1.0) - assoCamera.pose().translation();
 
       double yaw   = atan2(pointFromMain.y(),pointFromMain.x());
       double pitch = atan2(pointFromMain.z(),Point2(pointFromMain.x(),pointFromMain.y()).norm());
@@ -110,8 +110,8 @@ namespace gtsam {
         assoCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(assoPose, K);
       }
 
-      Point3 vecFromMain = mainCamera_ptr->backproject(measurementFromMain, 1.0);
-      Point3 vecFromAsso = assoCamera_ptr->backproject(measurementFromAsso, 1.0);
+      Point3 vecFromMain = mainCamera_ptr->backproject(measurementFromMain, 1.0) - mainCamera_ptr->pose().translation();
+      Point3 vecFromAsso = assoCamera_ptr->backproject(measurementFromAsso, 1.0) - assoCamera_ptr->pose().translation();
 
       double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
       double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
