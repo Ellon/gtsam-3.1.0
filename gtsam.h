@@ -2284,6 +2284,10 @@ virtual class ParallaxAngleSingleAnchorProjectionFactor : gtsam::NoiseModelFacto
       size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
       const POSE& body_P_sensor);
 
+  // Error functions
+  Vector evaluateError(const gtsam::Pose3& mainPose, const gtsam::ParallaxAnglePoint2& point) const;
+  Vector evaluateError(const gtsam::Pose3& mainPose, const gtsam::ParallaxAnglePoint3& point) const;
+
   gtsam::Point2 measured() const;
   CALIBRATION* calibration() const;
   bool verboseCheirality() const;
@@ -2311,6 +2315,11 @@ virtual class ParallaxAngleOnlyAnchorsProjectionFactor : gtsam::NoiseModelFactor
       size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
       const POSE& body_P_sensor);
 
+  // Error functions
+  Vector evaluateError(const gtsam::Pose3& mainPose, const gtsam::Pose3& assoPose, const gtsam::ParallaxAnglePoint3& point) const;
+
+
+
   gtsam::Point2 measured() const;
   CALIBRATION* calibration() const;
   bool verboseCheirality() const;
@@ -2335,6 +2344,9 @@ virtual class ParallaxAngleProjectionFactor : gtsam::NoiseModelFactor {
   ParallaxAngleProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
       size_t mainAnchorKey, size_t associatedAnchorKey, size_t otherAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
       const POSE& body_P_sensor);
+
+  // Error functions
+  Vector evaluateError(const gtsam::Pose3& mainPose, const gtsam::Pose3& assoPose, const gtsam::Pose3& othePose, const gtsam::ParallaxAnglePoint3& point) const;
 
   gtsam::Point2 measured() const;
   CALIBRATION* calibration() const;
