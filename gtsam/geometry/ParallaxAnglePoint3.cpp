@@ -205,6 +205,31 @@ Vector3 ParallaxAnglePoint3::directionVectorFromOtheAnchor(
 
 }
 
+Point3 ParallaxAnglePoint3::toPoint3(const Point3 & mainAnchor, const Point3 &  assoAnchor) const
+{
+  Vector3 vecFromMain = directionVectorFromMainAnchor();
+
+  Point3 mainToAsso = (assoAnchor - mainAnchor);
+
+  double mainAngle = angleBetweenUnitVectors(vecFromMain, mainToAsso.normalize().vector());
+
+  double depthFromMain = (sin(mainAngle + parallax_)/sin(parallax_))*mainToAsso.norm();
+
+  return mainAnchor + Point3(vecFromMain*depthFromMain);
+
+}
+
+Point3 ParallaxAnglePoint3::toPoint3(const Pose3 & mainPose, const Pose3 & assoPose, boost::optional<const Pose3 &> body_P_sensor) const
+{
+  if(body_P_sensor)
+  {
+    return toPoint3(mainPose.compose(*body_P_sensor).translation(), assoPose.compose(*body_P_sensor).translation());
+  }
+  //else
+
+  return toPoint3(mainPose.translation(), assoPose.translation());
+}
+
 }
 
 // Local Functions

@@ -192,6 +192,10 @@ namespace gtsam {
       boost::optional<gtsam::Matrix&> Dasso  = boost::none,
       boost::optional<gtsam::Matrix&> Dothe  = boost::none) const;
 
+    Point3 toPoint3(const Point3 & mainAnchor, const Point3 &  assoAnchor) const;
+
+    Point3 toPoint3(const Pose3 & mainPose, const Pose3 & assoPose, boost::optional<const Pose3 &> body_P_sensor = boost::none) const;
+
     /// Output stream operator
     GTSAM_EXPORT friend std::ostream &operator<<(std::ostream &os, const ParallaxAnglePoint3& p);
 
