@@ -921,6 +921,10 @@ virtual class ParallaxAnglePoint3 : gtsam::Value {
   Vector directionVectorFromAssoAnchor(const gtsam::Point3& mainAnchor, const gtsam::Point3& assoAnchor) const;
   Vector directionVectorFromOtheAnchor(const gtsam::Point3& mainAnchor, const gtsam::Point3& assoAnchor, const gtsam::Point3& otheAnchor) const;
 
+  gtsam::Point3 toPoint3(const gtsam::Point3 & mainAnchor, const gtsam::Point3 & assoAnchor) const;
+  gtsam::Point3 toPoint3(const gtsam::Pose3  & mainPose,   const gtsam::Pose3  & assoPose)   const;
+  gtsam::Point3 toPoint3(const gtsam::Pose3  & mainPose,   const gtsam::Pose3  & assoPose, const gtsam::Pose3 & body_P_sensor) const;
+
   // enabling serialization functionality
   void serialize() const;
 };
