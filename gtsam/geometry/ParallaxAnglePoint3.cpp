@@ -213,7 +213,15 @@ Point3 ParallaxAnglePoint3::toPoint3(const Point3 & mainAnchor, const Point3 &  
 
   double mainAngle = angleBetweenUnitVectors(vecFromMain, mainToAsso.normalize().vector());
 
-  double depthFromMain = (sin(mainAngle + parallax_)/sin(parallax_))*mainToAsso.norm();
+  double sinParalax = sin(parallax_);
+  // Guard to avoid division by zero
+  if(fabs(sinParalax) <= 1e-6)
+  {
+    if (sinParalax < 0) sinParalax = -1e-6;
+    else sinParalax = 1e-6;
+  }
+
+  double depthFromMain = (sin(mainAngle + parallax_)/sinParalax)*mainToAsso.norm();
 
   return mainAnchor + Point3(vecFromMain*depthFromMain);
 
