@@ -2132,6 +2132,7 @@ class ISAM2 {
   //void update(const gtsam::NonlinearFactorGraph& newFactors, const gtsam::Values& newTheta, const gtsam::KeyVector& removeFactorIndices, FastMap<Key,int>& constrainedKeys, bool force_relinearize);
 
   gtsam::Values getLinearizationPoint() const;
+  void updateLinearizationPoint(const gtsam::Values& newTheta);
   gtsam::Values calculateEstimate() const;
   gtsam::Value calculateEstimate(size_t key) const;
   gtsam::Values calculateBestEstimate() const;

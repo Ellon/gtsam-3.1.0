@@ -551,6 +551,8 @@ public:
   /** Access the current linearization point */
   const Values& getLinearizationPoint() const { return theta_; }
 
+  void updateLinearizationPoint(const Values& newTheta) { theta_.update(newTheta); }
+
   /** Compute an estimate from the incomplete linear delta computed during the last update.
    * This delta is incomplete because it was not updated below wildfire_threshold.  If only
    * a single variable is needed, it is faster to call calculateEstimate(const KEY&).
