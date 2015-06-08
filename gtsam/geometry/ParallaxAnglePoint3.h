@@ -145,7 +145,7 @@ namespace gtsam {
     inline size_t dim() const { return dimension; }
 
     /// Updates a with tangent space delta
-    inline ParallaxAnglePoint3 retract(const Vector& v) const { return ParallaxAnglePoint3(*this + v); }
+    ParallaxAnglePoint3 retract(const Vector& v) const;
 
     /// Returns inverse retraction
     inline Vector3 localCoordinates(const ParallaxAnglePoint3& q) const { return (q - *this).vector(); }

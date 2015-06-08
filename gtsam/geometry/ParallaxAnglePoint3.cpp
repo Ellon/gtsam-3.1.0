@@ -71,6 +71,18 @@ ParallaxAnglePoint3 ParallaxAnglePoint3::operator-(const ParallaxAnglePoint3& q)
 }
 
 /* ************************************************************************* */
+ParallaxAnglePoint3 ParallaxAnglePoint3::retract(const Vector& v) const
+{
+  ParallaxAnglePoint3 point = (*this + v);
+
+  // Force parallax to be positive
+  if(point.parallax_ < 1e-6)
+    point.parallax_ = 1e-6;
+
+  return point;
+}
+
+/* ************************************************************************* */
 ostream &operator<<(ostream &os, const ParallaxAnglePoint3& p) {
   os << '(' << p.yaw() << ", " << p.pitch() << ", " << p.parallax() << ')';
   return os;
