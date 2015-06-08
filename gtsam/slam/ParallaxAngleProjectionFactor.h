@@ -948,7 +948,7 @@ namespace gtsam {
         if (Dpoint)  *Dpoint = zeros(2,3);
         if (verboseCheirality_)
           std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key4()) <<
-              " with anchors (" << DefaultKeyFormatter(this->key1()) << "," << DefaultKeyFormatter(this->key2()) <<
+              " with anchors (" << DefaultKeyFormatter(this->key1()) << "," << DefaultKeyFormatter(this->key2()) << ")" <<
               " moved behind camera " << DefaultKeyFormatter(this->key3()) << std::endl;
         if (throwCheirality_)
           throw e;
