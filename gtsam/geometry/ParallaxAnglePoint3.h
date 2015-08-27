@@ -28,6 +28,8 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/PinholeCamera.h>
 
+#include <gtsam/geometry/ParallaxAnglePointTools.h>
+
 #include <boost/serialization/nvp.hpp>
 
 #include <cmath>
@@ -45,8 +47,8 @@ namespace gtsam {
     static const size_t dimension = 3;
 
   private:
-    double yaw_; ///< Angle around z-axis, in rad.
     double pitch_; ///< Angle around y-axis, in rad.
+    double yaw_; ///< Angle around z-axis, in rad.
     double parallax_; ///< Angle between main anchor to feature vector and associated anchor to feature, in rad.
 
   public:
@@ -55,10 +57,10 @@ namespace gtsam {
     /// @{
 
     /// Default constructor creates a ParallaxAnglePoint3 oriented on x-axis, and with coincident anchors.
-    ParallaxAnglePoint3(): yaw_(0), pitch_(0), parallax_(0) {}
+    ParallaxAnglePoint3(): pitch_(0), yaw_(0), parallax_(0) {}
 
     /// Construct from yaw, pitch, and parallax coordinates
-    ParallaxAnglePoint3(double yaw, double pitch, double parallax): yaw_(yaw), pitch_(pitch), parallax_(parallax) {}
+    ParallaxAnglePoint3(double pitch, double yaw, double parallax): pitch_(pitch), yaw_(yaw), parallax_(parallax) {}
 
     /// @}
     /// @name Advanced Constructors
@@ -68,8 +70,8 @@ namespace gtsam {
     ParallaxAnglePoint3(const Vector& v) {
       if(v.size() != 3)
         throw std::invalid_argument("ParallaxAnglePoint3 constructor from Vector requires that the Vector have dimension 3");
-      yaw_ = v(0);
-      pitch_ = v(1);
+      pitch_ = v(0);
+      yaw_ = v(1);
       parallax_ = v(2);
     }
 
@@ -79,14 +81,17 @@ namespace gtsam {
       const PinholeCameraType &mainCamera, const Point2 &measurementFromMain,
       const PinholeCameraType &assoCamera, const Point2 &measurementFromAsso)
     {
-      Point3 pointFromMain = mainCamera.backproject(measurementFromMain, 1.0) - mainCamera.pose().translation();
-      Point3 pointFromAsso = assoCamera.backproject(measurementFromAsso, 1.0) - assoCamera.pose().translation();
+      // 'backprojectPointAtInfinity' returns the point already in the world frame
+      Point3 pointFromMain = mainCamera.backprojectPointAtInfinity(measurementFromMain);
+      Point3 pointFromAsso = assoCamera.backprojectPointAtInfinity(measurementFromAsso);
 
-      double yaw   = atan2(pointFromMain.y(),pointFromMain.x());
-      double pitch = atan2(pointFromMain.z(),Point2(pointFromMain.x(),pointFromMain.y()).norm());
-      double parallax = acos(pointFromMain.dot(pointFromAsso)/(pointFromMain.norm()*pointFromAsso.norm()));
+      Vector2 py = vec2py(pointFromMain.vector());
 
-      return ParallaxAnglePoint3(yaw,pitch,parallax);
+      double pitch = py(0);
+      double yaw   = py(1);
+      double parallax = vectors2angle(pointFromMain.vector(),pointFromAsso.vector());
+
+      return ParallaxAnglePoint3(pitch,yaw,parallax);
     }
 
     /// Construct from main and associated poses, together with respective measurements, camera calibration and body to sensor pose
@@ -110,14 +115,17 @@ namespace gtsam {
         assoCamera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(assoPose, K);
       }
 
-      Point3 vecFromMain = mainCamera_ptr->backproject(measurementFromMain, 1.0) - mainCamera_ptr->pose().translation();
-      Point3 vecFromAsso = assoCamera_ptr->backproject(measurementFromAsso, 1.0) - assoCamera_ptr->pose().translation();
+      // 'backprojectPointAtInfinity' returns the point already in the world frame
+      Point3 vecFromMain = mainCamera_ptr->backprojectPointAtInfinity(measurementFromMain);
+      Point3 vecFromAsso = assoCamera_ptr->backprojectPointAtInfinity(measurementFromAsso);
 
-      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
-      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
-      double parallax = acos(vecFromMain.dot(vecFromAsso)/(vecFromMain.norm()*vecFromAsso.norm()));
+      Vector2 py = vec2py(vecFromMain.vector());
 
-      return ParallaxAnglePoint3(yaw,pitch,parallax);
+      double pitch = py(0);
+      double yaw   = py(1);
+      double parallax = vectors2angle(vecFromMain.vector(),vecFromAsso.vector());
+
+      return ParallaxAnglePoint3(pitch,yaw,parallax);
     }
 
     static ParallaxAnglePoint3 FromParallaxAnglePointAndAnchors(const ParallaxAnglePoint3 &oldPoint,

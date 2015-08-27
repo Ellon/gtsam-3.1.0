@@ -27,6 +27,8 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/PinholeCamera.h>
 
+#include <gtsam/geometry/ParallaxAnglePointTools.h>
+
 #include <boost/serialization/nvp.hpp>
 
 #include <cmath>
@@ -44,8 +46,8 @@ namespace gtsam {
     static const size_t dimension = 2;
 
   private:
-    double yaw_; ///< Angle around z-axis, in rad.
     double pitch_; ///< Angle around y-axis, in rad.
+    double yaw_; ///< Angle around z-axis, in rad.
 
   public:
 
@@ -53,10 +55,10 @@ namespace gtsam {
     /// @{
 
     /// Default constructor creates a ParallaxAnglePoint2 oriented on x-axis.
-    ParallaxAnglePoint2(): yaw_(0), pitch_(0) {}
+    ParallaxAnglePoint2(): pitch_(0), yaw_(0) {}
 
     /// Construct from x, y, and z coordinates
-    ParallaxAnglePoint2(double yaw, double pitch): yaw_(yaw), pitch_(pitch) {}
+    ParallaxAnglePoint2(double pitch, double yaw): pitch_(pitch), yaw_(yaw) {}
 
     /// @}
     /// @name Advanced Constructors
@@ -66,19 +68,19 @@ namespace gtsam {
     ParallaxAnglePoint2(const Vector& v) {
       if(v.size() != 2)
         throw std::invalid_argument("ParallaxAnglePoint2 constructor from Vector requires that the Vector have dimension 2");
-      yaw_ = v(0);
-      pitch_ = v(1);
+      pitch_ = v(0);
+      yaw_ = v(1);
     }
 
     /// Construct from camera and measurement
     template<class PinholeCameraType>
     static ParallaxAnglePoint2 FromCameraAndMeasurement(const PinholeCameraType &camera, const Point2 &measurement)
     {
-      Point3 vecFromMain = camera.backproject(measurement, 1.0) - camera.pose().translation();
-      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
-      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
+      Point3 vecFromMain = camera.backprojectPointAtInfinity(measurement);
 
-      return ParallaxAnglePoint2(yaw,pitch);
+      Vector2 py = vec2py(vecFromMain.vector());
+
+      return ParallaxAnglePoint2(py(0),py(1));
     }
 
     /// Construct from pose, body to sensor pose and camera calibration
@@ -96,11 +98,11 @@ namespace gtsam {
         camera_ptr = boost::make_shared<PinholeCamera<CalibrationType> >(pose, K);
       }
 
-      Point3 vecFromMain = camera_ptr->backproject(measurement, 1.0) - camera_ptr->pose().translation();
-      double yaw   = atan2(vecFromMain.y(),vecFromMain.x());
-      double pitch = atan2(vecFromMain.z(),Point2(vecFromMain.x(),vecFromMain.y()).norm());
+      Point3 vecFromMain = camera_ptr->backprojectPointAtInfinity(measurement);
 
-      return ParallaxAnglePoint2(yaw,pitch);
+      Vector2 py = vec2py(vecFromMain.vector());
+
+      return ParallaxAnglePoint2(py(0),py(1));
     }
 
     /// @}

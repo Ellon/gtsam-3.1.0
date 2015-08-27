@@ -19,14 +19,6 @@
 
 using namespace std;
 
-// Prototypes of local functions
-double angleBetweenUnitVectors(
-  const gtsam::Vector3 & v1, const gtsam::Vector3 & v2,
-  boost::optional<gtsam::Matrix&> Dv1 = boost::none,
-  boost::optional<gtsam::Matrix&> Dv2 = boost::none);
-
-double norm(gtsam::Vector3 v, boost::optional<gtsam::Matrix&> Dv = boost::none);
-
 namespace gtsam {
 /* ************************************************************************* */
 ParallaxAnglePoint3 ParallaxAnglePoint3::FromParallaxAnglePointAndAnchors(
@@ -37,11 +29,13 @@ ParallaxAnglePoint3 ParallaxAnglePoint3::FromParallaxAnglePointAndAnchors(
   Vector3 vecFromNewMain(oldPoint.directionVectorFromOtheAnchor(oldMainAnchor, oldAssoAnchor, newMainAnchor));
   Vector3 vecFromNewAsso(oldPoint.directionVectorFromOtheAnchor(oldMainAnchor, oldAssoAnchor, newAssoAnchor));
 
-  double yaw   = atan2(vecFromNewMain.y(),vecFromNewMain.x());
-  double pitch = atan2(vecFromNewMain.z(),Point2(vecFromNewMain.x(),vecFromNewMain.y()).norm());
-  double parallax = acos(vecFromNewMain.dot(vecFromNewAsso)/(vecFromNewMain.norm()*vecFromNewAsso.norm()));
+  Vector2 py = vec2py(vecFromNewMain);
+  double pitch = py(0);
+  double yaw   = py(1);
 
-  return ParallaxAnglePoint3(yaw,pitch,parallax);
+  double parallax = vectors2angle(vecFromNewMain,vecFromNewAsso);
+
+  return ParallaxAnglePoint3(pitch,yaw,parallax);
 }
 
 /* ************************************************************************* */
@@ -92,15 +86,17 @@ ostream &operator<<(ostream &os, const ParallaxAnglePoint3& p) {
 Vector3 ParallaxAnglePoint3::directionVectorFromMainAnchor(
   boost::optional<gtsam::Matrix&> H) const
 {
-  double sy = sin(yaw_), cy = cos(yaw_), sp = sin(pitch_), cp = cos(pitch_);
   if(H)
   {
+    Matrix VEC_p(3,1), VEC_y(3,1);
+    Vector3 vec = py2vec(pitch(),yaw(),VEC_p,VEC_y);
+
     H->resize(3,3);
-    *H << -sy*cp, -cy*sp, 0,
-           cy*cp, -sy*sp, 0,
-             0  ,   cp  , 0;
+    *H << VEC_p, VEC_y, zeros(3,1);
+    return vec;
   }
-  return (Vector(3) << cy*cp, sy*cp, sp);
+
+  return py2vec(pitch(), yaw());
 }
 
 /* ************************************************************************* */
@@ -138,82 +134,83 @@ Vector3 ParallaxAnglePoint3::directionVectorFromOtheAnchor(
   if (!Dpoint && !Dmain && !Dasso && !Dothe)
   {
     // Get vector from main anchor to associated anchor
-    Point3 main_T_asso(assoAnchor - mainAnchor);
-
-    // Get a normalized version of it
-    Vector3 main_T_asso_normd(main_T_asso.normalize().vector());
-
-    // Get the lenght of the vector
-    double norm_mTa = main_T_asso.norm();
+    Vector3 mainToAsso( assoAnchor.vector() - mainAnchor.vector() );
 
     // Get direction vector from main anchor to point
-    // NOTE: It's already normalized
-    Vector3 dirvec_mTp(directionVectorFromMainAnchor());
+    Vector3 dirMainToPoint(directionVectorFromMainAnchor());
 
     // Get the angle between these vectors
-    double phi = angleBetweenUnitVectors(dirvec_mTp, main_T_asso_normd);
+    double phi = vectors2angle(dirMainToPoint, mainToAsso);
 
     // Get vector from main anchor to other anchor
-    Vector3 main_T_other((otheAnchor - mainAnchor).vector());
+    Vector3 mainToOther(otheAnchor.vector() - mainAnchor.vector());
 
-    return sin(parallax_ + phi) * norm_mTa * dirvec_mTp - sin(parallax_) * main_T_other;
+    return sin(parallax_ + phi) * mainToAsso.norm() * dirMainToPoint - sin(parallax_) * mainToOther;
   }
 
   // Same computation with jacobians
 
   // Get vector from main anchor to associated anchor
-  Matrix MTA_assoAnchor, MTA_mainAnchor;
-  Point3 main_T_asso(assoAnchor.sub(mainAnchor, MTA_assoAnchor, MTA_mainAnchor));
-
-  // Get a normalized version of it
-  Matrix MTANORMD_mta;
-  Vector3 main_T_asso_normd(main_T_asso.normalize(MTANORMD_mta).vector());
+  Matrix MAINTOASSO_assoanchor, MAINTOASSO_mainanchor;
+  Vector3 mainToAsso( assoAnchor.sub(mainAnchor, MAINTOASSO_assoanchor, MAINTOASSO_mainanchor).vector() );
 
   // Get the lenght of the vector
-  Matrix NORMMTA_mta;
-  double norm_mTa = norm(main_T_asso.vector(), NORMMTA_mta);
+  Matrix NORMMAINTOASSO_maintoasso;
+  double normMainToAsso = norm(mainToAsso, NORMMAINTOASSO_maintoasso);
 
   // Get direction vector from main anchor to point
   // NOTE: It's already normalized
-  Matrix DIRVECMTP_point;
-  Vector3 dirvec_mTp(directionVectorFromMainAnchor(DIRVECMTP_point));
+  Matrix DIRMAINTOPOINT_point;
+  Vector3 dirMainToPoint(directionVectorFromMainAnchor(DIRMAINTOPOINT_point));
 
   // Get the angle between these vectors
-  Matrix PHI_dirvecmtp, PHI_mtanormd;
-  double phi = angleBetweenUnitVectors(dirvec_mTp, main_T_asso_normd, PHI_dirvecmtp, PHI_mtanormd);
+  Matrix PHI_dirmaintopoint, PHI_maintoasso;
+  double phi = vectors2angle(dirMainToPoint, mainToAsso, PHI_dirmaintopoint, PHI_maintoasso);
 
   // Get vector from main anchor to other anchor
-  Matrix MTO_otheanchor, MTO_mainanchor;
-  Vector3 main_T_othe(otheAnchor.sub(mainAnchor, MTO_otheanchor, MTO_mainanchor).vector());
+  Matrix MAINTOOTHER_otheanchor, MAINTOOTHER_mainanchor;
+  Vector3 mainToOther(otheAnchor.sub(mainAnchor, MAINTOOTHER_otheanchor, MAINTOOTHER_mainanchor).vector());
+
+  double sinParallaxPhi = sin(parallax_ + phi);
+  double SINPARALLAXPHI_parallax = cos(parallax_ + phi);
+  double SINPARALLAXPHI_phi      = cos(parallax_ + phi);
+
+  Vector3 dirOtherToPoint = sinParallaxPhi * normMainToAsso * dirMainToPoint - sin(parallax_) * mainToOther;
 
   // Chain of partial derivates
   // main anchor
+
   if(Dmain)
   {
-    *Dmain = dirvec_mTp * (  cos(parallax_ + phi) * norm_mTa * PHI_mtanormd * MTANORMD_mta * MTA_mainAnchor
-                           + sin(parallax_ + phi) * NORMMTA_mta * MTA_mainAnchor                           )
-             - sin(parallax_) * MTO_mainanchor;
+    Dmain->resize(3,3);
+    *Dmain << dirMainToPoint*( normMainToAsso*(SINPARALLAXPHI_phi * PHI_maintoasso * MAINTOASSO_mainanchor) + sinParallaxPhi*(NORMMAINTOASSO_maintoasso * MAINTOASSO_mainanchor) ) - sin(parallax_)*MAINTOOTHER_mainanchor;
   }
   // associated anchor
   if(Dasso)
   {
-    *Dasso = dirvec_mTp * (  cos(parallax_ + phi) * norm_mTa * PHI_mtanormd * MTANORMD_mta * MTA_assoAnchor
-                           + sin(parallax_ + phi) * NORMMTA_mta * MTA_assoAnchor                           );
+    Dasso->resize(3,3);
+    *Dasso << dirMainToPoint*( normMainToAsso*(SINPARALLAXPHI_phi * PHI_maintoasso * MAINTOASSO_assoanchor) + sinParallaxPhi*(NORMMAINTOASSO_maintoasso * MAINTOASSO_assoanchor) );
   }
   // other anchor
   if(Dothe)
   {
-    *Dothe = - sin(parallax_) * MTO_otheanchor;
+    Dothe->resize(3,3);
+    *Dothe = -sin(parallax_) * MAINTOOTHER_otheanchor;
   }
   // parallax point
   if(Dpoint)
   {
+    Matrix DIROTHERTOPOINT_py(3,2);
+    DIROTHERTOPOINT_py << normMainToAsso*( dirMainToPoint*(SINPARALLAXPHI_phi * PHI_dirmaintopoint * DIRMAINTOPOINT_point.block(0,0,3,2)) + sinParallaxPhi*DIRMAINTOPOINT_point.block(0,0,3,2) );
+
+    Matrix DIROTHERTOPOINT_parallax(3,1);
+    DIROTHERTOPOINT_parallax << (normMainToAsso * dirMainToPoint * SINPARALLAXPHI_parallax) - (cos(parallax_) * mainToOther);
+
     Dpoint->resize(3,3);
-    Dpoint->block(0,0,3,2) = (dirvec_mTp * (cos(parallax_ + phi)*PHI_dirvecmtp*DIRVECMTP_point.block(0,0,3,2)) + sin(parallax_ + phi)*DIRVECMTP_point.block(0,0,3,2)) * norm_mTa;
-    Dpoint->block(0,2,3,1) = norm_mTa * dirvec_mTp * cos(parallax_ + phi) - main_T_othe * cos(parallax_);
+    *Dpoint << DIROTHERTOPOINT_py, DIROTHERTOPOINT_parallax;
   }
 
-  return sin(parallax_ + phi) * norm_mTa * dirvec_mTp - sin(parallax_) * main_T_othe;
+  return dirOtherToPoint;
 
 }
 
@@ -223,7 +220,7 @@ Point3 ParallaxAnglePoint3::toPoint3(const Point3 & mainAnchor, const Point3 &  
 
   Point3 mainToAsso = (assoAnchor - mainAnchor);
 
-  double mainAngle = angleBetweenUnitVectors(vecFromMain, mainToAsso.normalize().vector());
+  double mainAngle = vectors2angle(vecFromMain, mainToAsso.vector());
 
   double sinParalax = sin(parallax_);
   // Guard to avoid division by zero
@@ -250,35 +247,4 @@ Point3 ParallaxAnglePoint3::toPoint3(const Pose3 & mainPose, const Pose3 & assoP
   return toPoint3(mainPose.translation(), assoPose.translation());
 }
 
-}
-
-// Local Functions
-double angleBetweenUnitVectors(
-  const gtsam::Vector3 & v1, const gtsam::Vector3 & v2,
-  boost::optional<gtsam::Matrix&> Dv1,
-  boost::optional<gtsam::Matrix&> Dv2)
-{
-  double dot_prod = v1.dot(v2);
-  if(Dv1)
-  {
-    Dv1->resize(1,3);
-    *Dv1 = -(1/sqrt(1-(dot_prod*dot_prod))) * v2.transpose();
-  }
- if(Dv2)
-  {
-    Dv2->resize(1,3);
-    *Dv2 = -(1/sqrt(1-(dot_prod*dot_prod))) * v1.transpose();
-  }
-  return acos(dot_prod);
-}
-
-double norm(gtsam::Vector3 v, boost::optional<gtsam::Matrix&> Dv)
-{
-  double n = v.norm();
-  if(Dv)
-  {
-    Dv->resize(1,3);
-    *Dv << v(0)/n, v(1)/n, v(2)/n;
-  }
-  return n;
 }

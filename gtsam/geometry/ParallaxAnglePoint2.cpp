@@ -45,15 +45,17 @@ ParallaxAnglePoint2 ParallaxAnglePoint2::operator-(const ParallaxAnglePoint2& q)
 /* ************************************************************************* */
 Vector3 ParallaxAnglePoint2::directionVector(boost::optional<gtsam::Matrix&> H) const
 {
-  double sy = sin(yaw_), cy = cos(yaw_), sp = sin(pitch_), cp = cos(pitch_);
   if(H)
   {
+    Matrix VEC_p(3,1), VEC_y(3,1);
+    Vector3 vec = py2vec(pitch(),yaw(),VEC_p,VEC_y);
+
     H->resize(3,2);
-    *H << -sy*cp, -cy*sp,
-           cy*cp, -sy*sp,
-             0  ,   cp  ;
+    *H << VEC_p, VEC_y;
+    return vec;
   }
-  return (Vector(3) << cy*cp, sy*cp, sp);
+
+  return py2vec(pitch(), yaw());
 }
 
 /* ************************************************************************* */
