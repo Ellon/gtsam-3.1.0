@@ -28,18 +28,18 @@ void ParallaxAnglePoint2::print(const string& s) const {
 
 /* ************************************************************************* */
 bool ParallaxAnglePoint2::equals(const ParallaxAnglePoint2 & q, double tol) const {
-  return (fabs(yaw_ - q.yaw()) < tol &&
-          fabs(pitch_ - q.pitch()) < tol);
+  return (fabs(pitch_ - q.pitch()) < tol &&
+          fabs(yaw_ - q.yaw()) < tol);
 }
 
 /* ************************************************************************* */
 ParallaxAnglePoint2 ParallaxAnglePoint2::operator+(const ParallaxAnglePoint2& q) const {
-  return ParallaxAnglePoint2(yaw_ + q.yaw_, pitch_ + q.pitch_);
+  return ParallaxAnglePoint2(pitch_ + q.pitch_, yaw_ + q.yaw_);
 }
 
 /* ************************************************************************* */
 ParallaxAnglePoint2 ParallaxAnglePoint2::operator-(const ParallaxAnglePoint2& q) const {
-  return ParallaxAnglePoint2(yaw_ - q.yaw_, pitch_ - q.pitch_);
+  return ParallaxAnglePoint2(pitch_ - q.pitch_, yaw_ - q.yaw_);
 }
 
 /* ************************************************************************* */
@@ -60,7 +60,7 @@ Vector3 ParallaxAnglePoint2::directionVector(boost::optional<gtsam::Matrix&> H) 
 
 /* ************************************************************************* */
 ostream &operator<<(ostream &os, const ParallaxAnglePoint2& p) {
-  os << '(' << p.yaw() << ", " << p.pitch() << ')';
+  os << '(' << p.pitch() << ", " << p.yaw() << ')';
   return os;
 }
 

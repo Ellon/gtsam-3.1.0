@@ -172,7 +172,7 @@ namespace gtsam {
     ParallaxAnglePoint3 operator - (const ParallaxAnglePoint3& q) const;
 
     /** return vectorized form (column-wise)*/
-    Vector3 vector() const { return Vector3(yaw_,pitch_,parallax_); }
+    Vector3 vector() const { return Vector3(pitch_,yaw_,parallax_); }
 
     /// get yaw
     inline double yaw() const {return yaw_;}
@@ -219,8 +219,8 @@ namespace gtsam {
     {
       ar & boost::serialization::make_nvp("ParallaxAnglePoint3",
           boost::serialization::base_object<Value>(*this));
-      ar & BOOST_SERIALIZATION_NVP(yaw_);
       ar & BOOST_SERIALIZATION_NVP(pitch_);
+      ar & BOOST_SERIALIZATION_NVP(yaw_);
       ar & BOOST_SERIALIZATION_NVP(parallax_);
     }
 

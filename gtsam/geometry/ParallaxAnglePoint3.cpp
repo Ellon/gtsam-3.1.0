@@ -78,7 +78,7 @@ ParallaxAnglePoint3 ParallaxAnglePoint3::retract(const Vector& v) const
 
 /* ************************************************************************* */
 ostream &operator<<(ostream &os, const ParallaxAnglePoint3& p) {
-  os << '(' << p.yaw() << ", " << p.pitch() << ", " << p.parallax() << ')';
+  os << '(' << p.pitch() << ", " << p.yaw() << ", " << p.parallax() << ')';
   return os;
 }
 
