@@ -139,65 +139,75 @@ namespace gtsam {
         // Test if we need jacobians
         if (!Dmain && !Dpoint)
         {
+          // Get the direction to the point from observation point
+          Point3 dirMainToPoint( point.directionVector() );
+
           if(body_P_sensor_)
           {
             // Get the main and associated anchors, and the camera pose
-            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_) );
+            Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_) );
 
-            // Get the direction to the point from observation point
-            Point3 obs_T_point( point.directionVector() );
+            Point3 pc = mainCameraPose.rotation().unrotate(dirMainToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
-
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
+
           }
           else
           {
-            // Get the direction to the point from observation point
-            Point3 obs_T_point( point.directionVector() );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+            Point3 pc = mainPose.rotation().unrotate(dirMainToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
           }
+
         }
 
         // Same computation but with jacobians
+
+        // Get the direction to the point from observation point
+        Matrix DIRMAINTOPOINT_point;
+        Point3 dirMainToPoint(point.directionVector( DIRMAINTOPOINT_point ));
+
         if(body_P_sensor_)
         {
-            // Get the main and associated anchors, and the camera pose
-            gtsam::Matrix MAINANCHORPOSE_mainpose;
-            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_, MAINANCHORPOSE_mainpose) );
 
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point;
-            Point3 obs_T_point(point.directionVector( OBS_T_POINT_point ));
+          // Get the main and associated anchors, and the camera pose
+          Matrix MAINCAMERAPOSE_mainpose;
+          Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_, MAINCAMERAPOSE_mainpose) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
+          Matrix PC_maincamerarot, PC_dirmaintopoint;
+          Point3 pc = mainCameraPose.rotation().unrotate(dirMainToPoint, PC_maincamerarot, PC_dirmaintopoint); // get direction in camera frame (translation does not matter)
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_mainanchorori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainanchorori, PROJ_obs_t_point) - measured_);
+          Matrix PC_maincamerapose = Matrix::Zero(3, 6);
+          PC_maincamerapose.block(0, 0, 3, 3) = PC_maincamerarot;
 
-            // Chain of jacobians
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          Point2 projection = K_->uncalibrate(pn);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          // Chain of jacobians
           if(Dmain)
           {
-            Matrix PROJ_mainanchorpose(2,6);
-            PROJ_mainanchorpose << PROJ_mainanchorori.block(0,0,2,3), zeros(2,3);
             Dmain->resize(2,6);
-            *Dmain << (PROJ_mainanchorpose * MAINANCHORPOSE_mainpose);
+            *Dmain << PI_pn * PN_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,2);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -205,30 +215,38 @@ namespace gtsam {
         }
         else
         {
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point;
-            Point3 obs_T_point(point.directionVector( OBS_T_POINT_point ));
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+          Matrix PC_mainrot, PC_dirmaintopoint;
+          Point3 pc = mainPose.rotation().unrotate(dirMainToPoint, PC_mainrot, PC_dirmaintopoint); // get direction in camera frame (translation does not matter)
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_mainori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainori, PROJ_obs_t_point) - measured_);
+          Matrix PC_mainpose = Matrix::Zero(3, 6);
+          PC_mainpose.block(0, 0, 3, 3) = PC_mainrot;
 
-            // Chain of jacobians
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          Point2 projection = K_->uncalibrate(pn);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PROJ_mainori.block(0,0,2,3), zeros(2,3);
+            *Dmain << PI_pn * PN_pc * PC_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,2);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
+
         }
       } catch( CheiralityException& e)
       {
@@ -252,65 +270,73 @@ namespace gtsam {
         // Test if we need jacobians
         if (!Dmain && !Dpoint)
         {
+          // Get the direction to the point from observation point
+          Point3 dirMainToPoint( point.directionVectorFromMainAnchor() );
+
           if(body_P_sensor_)
           {
             // Get the main and associated anchors, and the camera pose
-            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_) );
+            Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_) );
 
-            // Get the direction to the point from observation point
-            Point3 obs_T_point( point.directionVectorFromMainAnchor() );
+            Point3 pc = mainCameraPose.rotation().unrotate(dirMainToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
-
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
+
           }
           else
           {
-            // Get the direction to the point from observation point
-            Point3 obs_T_point( point.directionVectorFromMainAnchor() );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+            Point3 pc = mainPose.rotation().unrotate(dirMainToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
           }
+
         }
 
         // Same computation but with jacobians
+
+        // Get the direction to the point from observation point
+        Matrix DIRMAINTOPOINT_point(3,3);
+        Point3 dirMainToPoint(point.directionVectorFromMainAnchor( DIRMAINTOPOINT_point ));
+
         if(body_P_sensor_)
         {
-            // Get the main and associated anchors, and the camera pose
-            gtsam::Matrix MAINANCHORPOSE_mainpose;
-            Pose3 mainAnchorPose ( mainPose.compose(*body_P_sensor_, MAINANCHORPOSE_mainpose) );
 
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point;
-            Point3 obs_T_point(point.directionVectorFromMainAnchor( OBS_T_POINT_point ));
+          // Get the main and associated anchors, and the camera pose
+          Matrix MAINCAMERAPOSE_mainpose;
+          Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_, MAINCAMERAPOSE_mainpose) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainAnchorPose.rotation(), Point3()), *K_);
+          Matrix PC_maincamerarot, PC_dirmaintopoint;
+          Point3 pc = mainCameraPose.rotation().unrotate(dirMainToPoint, PC_maincamerarot, PC_dirmaintopoint); // get direction in camera frame (translation does not matter)
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_mainanchorori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainanchorori, PROJ_obs_t_point) - measured_);
+          Matrix PC_maincamerapose = Matrix::Zero(3, 6);
+          PC_maincamerapose.block(0, 0, 3, 3) = PC_maincamerarot;
 
-            // Chain of jacobians
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          // Chain of jacobians
           if(Dmain)
           {
-            Matrix PROJ_mainanchorpose(2,6);
-            PROJ_mainanchorpose << PROJ_mainanchorori.block(0,0,2,3), zeros(2,3);
             Dmain->resize(2,6);
-            *Dmain << (PROJ_mainanchorpose * MAINANCHORPOSE_mainpose);
+            *Dmain << PI_pn * PN_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -318,30 +344,36 @@ namespace gtsam {
         }
         else
         {
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point;
-            Point3 obs_T_point(point.directionVectorFromMainAnchor( OBS_T_POINT_point ));
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(mainPose.rotation(), Point3()), *K_);
+          Matrix PC_mainrot, PC_dirmaintopoint;
+          Point3 pc = mainPose.rotation().unrotate(dirMainToPoint, PC_mainrot, PC_dirmaintopoint); // get direction in camera frame (translation does not matter)
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_mainori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_mainori, PROJ_obs_t_point) - measured_);
+          Matrix PC_mainpose = Matrix::Zero(3, 6);
+          PC_mainpose.block(0, 0, 3, 3) = PC_mainrot;
 
-            // Chain of jacobians
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PROJ_mainori.block(0,0,2,3), zeros(2,3);
+            *Dmain << PI_pn * PN_pc * PC_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
+
         }
       } catch( CheiralityException& e)
       {
@@ -522,76 +554,85 @@ namespace gtsam {
         {
           if(body_P_sensor_)
           {
-            // Get the main and associated anchors, and the camera pose
-            Point3 mainAnchor     ( mainPose.compose(*body_P_sensor_).translation() );
-            Pose3  assoAnchorPose ( assoPose.compose(*body_P_sensor_)               );
+            // Get the main and associated camera poses
+            Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_) );
+            Pose3 assoCameraPose ( assoPose.compose(*body_P_sensor_) );
 
             // Get the direction to the point from observation point
-            Point3 obs_T_point(point.directionVectorFromAssoAnchor( mainAnchor, assoAnchorPose.translation() ));
+            Point3 dirAssoToPoint( point.directionVectorFromAssoAnchor( mainCameraPose.translation(), assoCameraPose.translation() ) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(assoAnchorPose.rotation(), Point3()), *K_);
+            Point3 pc = assoCameraPose.rotation().unrotate(dirAssoToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
+
           }
           else
           {
             // Get the direction to the point from observation point
-            Point3 obs_T_point(point.directionVectorFromAssoAnchor( mainPose.translation(), assoPose.translation() ));
+            Point3 dirAssoToPoint( point.directionVectorFromAssoAnchor( mainPose.translation(), assoPose.translation() ) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(assoPose.rotation(), Point3()), *K_);
+            Point3 pc = assoPose.rotation().unrotate(dirAssoToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
           }
+
         }
 
         // Same computation but with jacobians
         if(body_P_sensor_)
         {
-            // Get the main and associated anchors, and the camera pose
-            gtsam::Matrix MAINANCHORPOSE_mainpose, ASSOANCHORPOSE_assopose;
-            Point3 mainAnchor     ( mainPose.compose(*body_P_sensor_, MAINANCHORPOSE_mainpose).translation() );
-            Pose3  assoAnchorPose ( assoPose.compose(*body_P_sensor_, ASSOANCHORPOSE_assopose)               );
 
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point, OBS_T_POINT_mainanchorpos, OBS_T_POINT_assoanchorpos;
-            Point3 obs_T_point(point.directionVectorFromAssoAnchor( mainAnchor, assoAnchorPose.translation(),
-              OBS_T_POINT_point,
-              OBS_T_POINT_mainanchorpos,
-              OBS_T_POINT_assoanchorpos));
+          // Get the main and associated camera poses
+          Matrix MAINCAMERAPOSE_mainpose;
+          Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_, MAINCAMERAPOSE_mainpose) );
+          Matrix ASSOCAMERAPOSE_assopose;
+          Pose3 assoCameraPose ( assoPose.compose(*body_P_sensor_, ASSOCAMERAPOSE_assopose) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(assoAnchorPose.rotation(), Point3()), *K_);
+          // Get the direction to the point from observation point
+          Matrix DIRASSOTOPOINT_point, DIRASSOTOPOINT_maincameratr, DIRASSOTOPOINT_assocameratr;
+          Point3 dirAssoToPoint( point.directionVectorFromAssoAnchor( mainCameraPose.translation(), assoCameraPose.translation(), DIRASSOTOPOINT_point, DIRASSOTOPOINT_maincameratr, DIRASSOTOPOINT_assocameratr) );
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_assoanchorori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_assoanchorori, PROJ_obs_t_point) - measured_);
+          Matrix DIRASSOTOPOINT_maincamerapose = Matrix::Zero(3, 6);
+          DIRASSOTOPOINT_maincamerapose.block(0, 3, 3, 3) = DIRASSOTOPOINT_maincameratr;
 
-            // Chain of jacobians
+          Matrix PC_assocamerarot, PC_dirassotopoint;
+          Point3 pc = assoCameraPose.rotation().unrotate(dirAssoToPoint, PC_assocamerarot, PC_dirassotopoint); // get direction in camera frame (translation does not matter)
+
+          Matrix PC_assocamerapose = Matrix::Zero(3, 6);
+          PC_assocamerapose << PC_assocamerarot, PC_dirassotopoint*DIRASSOTOPOINT_assocameratr;
+
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          Matrix PI_pc = PI_pn * PN_pc;
+
+          // Chain of jacobians
           if(Dmain)
           {
-            Matrix PROJ_mainanchorpose = zeros(2,6);
-            PROJ_mainanchorpose.block(0,3,2,3) << (PROJ_obs_t_point * OBS_T_POINT_mainanchorpos);
             Dmain->resize(2,6);
-            *Dmain << (PROJ_mainanchorpose * MAINANCHORPOSE_mainpose);
+            *Dmain << PI_pc * PC_dirassotopoint * DIRASSOTOPOINT_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dasso)
           {
-            Matrix PROJ_assoanchorpose(2,6);
-            PROJ_assoanchorpose.block(0,0,2,3) << PROJ_assoanchorori.block(0,0,2,3);
-            PROJ_assoanchorpose.block(0,3,2,3) << (PROJ_obs_t_point * OBS_T_POINT_assoanchorpos);
             Dasso->resize(2,6);
-            *Dasso << (PROJ_assoanchorpose * ASSOANCHORPOSE_assopose);
+            *Dasso << PI_pc * PC_assocamerapose * ASSOCAMERAPOSE_assopose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pc * PC_dirassotopoint * DIRASSOTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -599,35 +640,46 @@ namespace gtsam {
         }
         else
         {
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point, OBS_T_POINT_mainpos, OBS_T_POINT_assopos;
-            Point3 obs_T_point(point.directionVectorFromAssoAnchor( mainPose.translation(), assoPose.translation(),
-              OBS_T_POINT_point,
-              OBS_T_POINT_mainpos,
-              OBS_T_POINT_assopos));
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(assoPose.rotation(), Point3()), *K_);
+          // Get the direction to the point from observation point
+          Matrix DIRASSOTOPOINT_point, DIRASSOTOPOINT_maintr, DIRASSOTOPOINT_assotr;
+          Point3 dirAssoToPoint( point.directionVectorFromAssoAnchor( mainPose.translation(), assoPose.translation(), DIRASSOTOPOINT_point, DIRASSOTOPOINT_maintr, DIRASSOTOPOINT_assotr) );
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_assoori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_assoori, PROJ_obs_t_point) - measured_);
+          Matrix DIRASSOTOPOINT_mainpose = Matrix::Zero(3, 6);
+          DIRASSOTOPOINT_mainpose.block(0, 3, 3, 3) = DIRASSOTOPOINT_maintr;
 
-            // Chain of jacobians
+          Matrix PC_assorot, PC_dirassotopoint;
+          Point3 pc = assoPose.rotation().unrotate(dirAssoToPoint, PC_assorot, PC_dirassotopoint); // get direction in camera frame (translation does not matter)
+
+          Matrix PC_assopose = Matrix::Zero(3, 6);
+          PC_assopose << PC_assorot, PC_dirassotopoint*DIRASSOTOPOINT_assotr;
+
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          Matrix PI_pc = PI_pn * PN_pc;
+
+          // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << zeros(2,3), (PROJ_obs_t_point * OBS_T_POINT_mainpos);
+            *Dmain << PI_pc * PC_dirassotopoint * DIRASSOTOPOINT_mainpose;
           }
           if(Dasso)
           {
             Dasso->resize(2,6);
-            *Dasso << PROJ_assoori.block(0,0,2,3), (PROJ_obs_t_point * OBS_T_POINT_assopos);
+            *Dasso << PI_pc * PC_assopose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pc * PC_dirassotopoint * DIRASSOTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -812,87 +864,100 @@ namespace gtsam {
         // Test if we need jacobians
         if (!Dmain && !Dasso && !Dothe && !Dpoint)
         {
+
           if(body_P_sensor_)
           {
-            // Get the main and associated anchors, and the camera pose
-            Point3 mainAnchor( mainPose.compose(*body_P_sensor_).translation() );
-            Point3 assoAnchor( assoPose.compose(*body_P_sensor_).translation() );
-            Pose3  camPose   ( othePose.compose(*body_P_sensor_)               );
+            // Get the main and associated camera poses
+            Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_) );
+            Pose3 assoCameraPose ( assoPose.compose(*body_P_sensor_) );
+            Pose3 otheCameraPose ( othePose.compose(*body_P_sensor_) );
 
             // Get the direction to the point from observation point
-            Point3 obs_T_point(point.directionVectorFromOtheAnchor( mainAnchor, assoAnchor, camPose.translation()));
+            Point3 dirOtheToPoint( point.directionVectorFromOtheAnchor( mainCameraPose.translation(), assoCameraPose.translation(), otheCameraPose.translation() ) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(camPose.rotation(), Point3()), *K_);
+            Point3 pc = otheCameraPose.rotation().unrotate(dirOtheToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
+
           }
           else
           {
+
             // Get the direction to the point from observation point
-            Point3 obs_T_point(point.directionVectorFromOtheAnchor( mainPose.translation(), assoPose.translation(), othePose.translation()));
+            Point3 dirOtheToPoint( point.directionVectorFromOtheAnchor( mainPose.translation(), assoPose.translation(), othePose.translation() ) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(othePose.rotation(), Point3()), *K_);
+            Point3 pc = othePose.rotation().unrotate(dirOtheToPoint); // get direction in camera frame (translation does not matter)
+            Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc); // project the point to the camera
+            Point2 pi = K_->uncalibrate(pn);
+            Point2 reprojectionError = pi - measured_;
 
-            // Project direction vector to camera and calculate the error
-            Point2 reprojectionError(camera.project(obs_T_point) - measured_);
             return reprojectionError.vector();
+
           }
+
         }
 
         // Same computation but with jacobians
         if(body_P_sensor_)
         {
-            // Get the main and associated anchors, and the camera pose
-            gtsam::Matrix MAINANCHORPOSE_mainpose, ASSOANCHORPOSE_assopose, CAMPOSE_othepose;
-            Point3 mainAnchor( mainPose.compose(*body_P_sensor_, MAINANCHORPOSE_mainpose).translation() );
-            Point3 assoAnchor( assoPose.compose(*body_P_sensor_, ASSOANCHORPOSE_assopose).translation() );
-            Pose3  camPose   ( othePose.compose(*body_P_sensor_, CAMPOSE_othepose       )               );
 
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point, OBS_T_POINT_mainanchorpos, OBS_T_POINT_assoanchorpos, OBS_T_POINT_campos;
-            Point3 obs_T_point(point.directionVectorFromOtheAnchor( mainAnchor, assoAnchor, camPose.translation(),
-              OBS_T_POINT_point,
-              OBS_T_POINT_mainanchorpos,
-              OBS_T_POINT_assoanchorpos,
-              OBS_T_POINT_campos));
+          // Get the main and associated camera poses
+          Matrix MAINCAMERAPOSE_mainpose;
+          Pose3 mainCameraPose ( mainPose.compose(*body_P_sensor_, MAINCAMERAPOSE_mainpose) );
+          Matrix ASSOCAMERAPOSE_assopose;
+          Pose3 assoCameraPose ( assoPose.compose(*body_P_sensor_, ASSOCAMERAPOSE_assopose) );
+          Matrix OTHECAMERAPOSE_othepose;
+          Pose3 otheCameraPose ( othePose.compose(*body_P_sensor_, OTHECAMERAPOSE_othepose) );
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(camPose.rotation(), Point3()), *K_);
+          // Get the direction to the point from observation point
+          Matrix DIROTHETOPOINT_point, DIROTHETOPOINT_maincameratr, DIROTHETOPOINT_assocameratr, DIROTHETOPOINT_othecameratr;
+          Point3 dirOtheToPoint( point.directionVectorFromOtheAnchor( mainCameraPose.translation(), assoCameraPose.translation(), otheCameraPose.translation(), DIROTHETOPOINT_point, DIROTHETOPOINT_maincameratr, DIROTHETOPOINT_assocameratr, DIROTHETOPOINT_othecameratr) );
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_camori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_camori, PROJ_obs_t_point) - measured_);
+          Matrix DIROTHETOPOINT_maincamerapose = Matrix::Zero(3, 6);
+          DIROTHETOPOINT_maincamerapose.block(0, 3, 3, 3) = DIROTHETOPOINT_maincameratr;
+          Matrix DIROTHETOPOINT_assocamerapose = Matrix::Zero(3, 6);
+          DIROTHETOPOINT_assocamerapose.block(0, 3, 3, 3) = DIROTHETOPOINT_assocameratr;
 
-            // Chain of jacobians
+          Matrix PC_othecamerarot, PC_dirothetopoint;
+          Point3 pc = otheCameraPose.rotation().unrotate(dirOtheToPoint, PC_othecamerarot, PC_dirothetopoint); // get direction in camera frame (translation does not matter)
+
+          Matrix PC_othecamerapose = Matrix::Zero(3, 6);
+          PC_othecamerapose << PC_othecamerarot, PC_dirothetopoint*DIROTHETOPOINT_othecameratr;
+
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          Matrix PI_pc = PI_pn * PN_pc;
+
+          // Chain of jacobians
           if(Dmain)
           {
-            Matrix PROJ_mainanchorpose = zeros(2,6);
-            PROJ_mainanchorpose.block(0,3,2,3) << (PROJ_obs_t_point * OBS_T_POINT_mainanchorpos);
             Dmain->resize(2,6);
-            *Dmain << (PROJ_mainanchorpose * MAINANCHORPOSE_mainpose);
+            *Dmain << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dasso)
           {
-            Matrix PROJ_assoanchorpose = zeros(2,6);
-            PROJ_assoanchorpose.block(0,3,2,3) << (PROJ_obs_t_point * OBS_T_POINT_assoanchorpos);
             Dasso->resize(2,6);
-            *Dasso << (PROJ_assoanchorpose * ASSOANCHORPOSE_assopose);
+            *Dasso << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_assocamerapose * ASSOCAMERAPOSE_assopose;
           }
           if(Dothe)
           {
-            Matrix PROJ_campose(2,6);
-            PROJ_campose << PROJ_camori.block(0,0,2,3), (PROJ_obs_t_point * OBS_T_POINT_campos);
             Dothe->resize(2,6);
-            *Dothe << (PROJ_campose * CAMPOSE_othepose);
+            *Dothe << PI_pc * PC_othecamerapose * OTHECAMERAPOSE_othepose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -900,42 +965,53 @@ namespace gtsam {
         }
         else
         {
-            // Get the direction to the point from observation point
-            Matrix OBS_T_POINT_point, OBS_T_POINT_mainanchorpos, OBS_T_POINT_assoanchorpos, OBS_T_POINT_campos;
-            Point3 obs_T_point(point.directionVectorFromOtheAnchor(
-              mainPose.translation(), assoPose.translation(), othePose.translation(),
-              OBS_T_POINT_point,
-              OBS_T_POINT_mainanchorpos,
-              OBS_T_POINT_assoanchorpos,
-              OBS_T_POINT_campos));
 
-            // Put a camera at the origin
-            PinholeCamera<CALIBRATION> camera(Pose3(othePose.rotation(), Point3()), *K_);
+          // Get the direction to the point from observation point
+          Matrix DIROTHETOPOINT_point, DIROTHETOPOINT_maintr, DIROTHETOPOINT_assotr, DIROTHETOPOINT_othetr;
+          Point3 dirOtheToPoint( point.directionVectorFromOtheAnchor( mainPose.translation(), assoPose.translation(), othePose.translation(), DIROTHETOPOINT_point, DIROTHETOPOINT_maintr, DIROTHETOPOINT_assotr, DIROTHETOPOINT_othetr) );
 
-            // Project direction vector to camera and calculate the error
-            Matrix PROJ_camori, PROJ_obs_t_point;
-            Point2 reprojectionError(camera.project(obs_T_point, PROJ_camori, PROJ_obs_t_point) - measured_);
+          Matrix DIROTHETOPOINT_mainpose = Matrix::Zero(3, 6);
+          DIROTHETOPOINT_mainpose.block(0, 3, 3, 3) = DIROTHETOPOINT_maintr;
+          Matrix DIROTHETOPOINT_assopose = Matrix::Zero(3, 6);
+          DIROTHETOPOINT_assopose.block(0, 3, 3, 3) = DIROTHETOPOINT_assotr;
 
-            // Chain of jacobians
+          Matrix PC_otherot, PC_dirothetopoint;
+          Point3 pc = othePose.rotation().unrotate(dirOtheToPoint, PC_otherot, PC_dirothetopoint); // get direction in camera frame (translation does not matter)
+
+          Matrix PC_othepose = Matrix::Zero(3, 6);
+          PC_othepose << PC_otherot, PC_dirothetopoint*DIROTHETOPOINT_othetr;
+
+          Matrix PN_pc; // 2*3
+          Point2 pn = PinholeCamera<CALIBRATION>::project_to_camera(pc, PN_pc);
+
+          // uncalibration
+          Matrix PI_pn; // 2*2
+          Point2 pi = K_->uncalibrate(pn, boost::none, PI_pn);
+
+          Point2 reprojectionError = pi - measured_;
+
+          Matrix PI_pc = PI_pn * PN_pc;
+
+          // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << zeros(2,3), (PROJ_obs_t_point * OBS_T_POINT_mainanchorpos);
+            *Dmain << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_mainpose;
           }
           if(Dasso)
           {
             Dasso->resize(2,6);
-            *Dasso << zeros(2,3), (PROJ_obs_t_point * OBS_T_POINT_assoanchorpos);
+            *Dasso << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_assopose;
           }
           if(Dothe)
           {
             Dothe->resize(2,6);
-            *Dothe << PROJ_camori.block(0,0,2,3), (PROJ_obs_t_point * OBS_T_POINT_campos);
+            *Dothe << PI_pc * PC_othepose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << (PROJ_obs_t_point * OBS_T_POINT_point);
+            *Dpoint << PI_pc * PC_dirothetopoint * DIROTHETOPOINT_point;
           }
 
           return reprojectionError.vector();
