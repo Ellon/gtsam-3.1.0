@@ -225,6 +225,8 @@ struct GTSAM_EXPORT ISAM2Params {
   KeyFormatter getKeyFormatter() const { return keyFormatter; }
   bool isEnableDetailedResults() const { return enableDetailedResults; }
   bool isEnablePartialRelinearizationCheck() const { return enablePartialRelinearizationCheck; }
+  bool isFindUnusedFactorSlots() const { return findUnusedFactorSlots; }
+
 
   void setOptimizationParams(OptimizationParams optimizationParams) { this->optimizationParams = optimizationParams; }
   void setRelinearizeThreshold(RelinearizationThreshold relinearizeThreshold) { this->relinearizeThreshold = relinearizeThreshold; }
@@ -236,6 +238,8 @@ struct GTSAM_EXPORT ISAM2Params {
   void setKeyFormatter(KeyFormatter keyFormatter) { this->keyFormatter = keyFormatter; }
   void setEnableDetailedResults(bool enableDetailedResults) { this->enableDetailedResults = enableDetailedResults; }
   void setEnablePartialRelinearizationCheck(bool enablePartialRelinearizationCheck) { this->enablePartialRelinearizationCheck = enablePartialRelinearizationCheck; }
+  void setFindUnusedFactorSlots(bool findUnusedFactorSlots) { this->findUnusedFactorSlots = findUnusedFactorSlots; }
+
 
   Factorization factorizationTranslator(const std::string& str) const;
   std::string factorizationTranslator(const Factorization& value) const;
