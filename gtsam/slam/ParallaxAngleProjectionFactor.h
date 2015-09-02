@@ -38,7 +38,7 @@ namespace gtsam {
    * @addtogroup SLAM
    */
   template<class POSE, class LANDMARK, class CALIBRATION = Cal3_S2>
-  class ParallaxAngleSingleAnchorProjectionFactor: public NoiseModelFactor2<POSE, LANDMARK>
+  class ParallaxAngleMainAnchorProjectionFactor: public NoiseModelFactor2<POSE, LANDMARK>
   {
   protected:
 
@@ -57,13 +57,13 @@ namespace gtsam {
     typedef NoiseModelFactor2<POSE, LANDMARK> Base;
 
     /// shorthand for this class
-    typedef ParallaxAngleSingleAnchorProjectionFactor<POSE, LANDMARK, CALIBRATION> This;
+    typedef ParallaxAngleMainAnchorProjectionFactor<POSE, LANDMARK, CALIBRATION> This;
 
     /// shorthand for a smart pointer to a factor
     typedef boost::shared_ptr<This> shared_ptr;
 
     /// Default constructor
-    ParallaxAngleSingleAnchorProjectionFactor() : throwCheirality_(false), verboseCheirality_(false) {}
+    ParallaxAngleMainAnchorProjectionFactor() : throwCheirality_(false), verboseCheirality_(false) {}
 
     /**
      * Constructor
@@ -75,7 +75,7 @@ namespace gtsam {
      * @param K shared pointer to the constant calibration
      * @param body_P_sensor is the transform from body to sensor frame (default identity)
      */
-    ParallaxAngleSingleAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
+    ParallaxAngleMainAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
         Key mainAnchorKey, Key pointKey, const boost::shared_ptr<CALIBRATION>& K,
         boost::optional<POSE> body_P_sensor = boost::none) :
           Base(model, mainAnchorKey, pointKey), measured_(measured), K_(K), body_P_sensor_(body_P_sensor),
@@ -93,7 +93,7 @@ namespace gtsam {
      * @param verboseCheirality determines whether exceptions are printed for Cheirality
      * @param body_P_sensor is the transform from body to sensor frame  (default identity)
      */
-    ParallaxAngleSingleAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
+    ParallaxAngleMainAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
         Key mainAnchorKey, Key pointKey, const boost::shared_ptr<CALIBRATION>& K,
         bool throwCheirality, bool verboseCheirality,
         boost::optional<POSE> body_P_sensor = boost::none) :
@@ -101,7 +101,7 @@ namespace gtsam {
           throwCheirality_(throwCheirality), verboseCheirality_(verboseCheirality) {}
 
     /** Virtual destructor */
-    virtual ~ParallaxAngleSingleAnchorProjectionFactor() {}
+    virtual ~ParallaxAngleMainAnchorProjectionFactor() {}
 
     /// @return a deep copy of this factor
     virtual gtsam::NonlinearFactor::shared_ptr clone() const {
@@ -114,7 +114,7 @@ namespace gtsam {
      * @param keyFormatter optional formatter useful for printing Symbols
      */
     void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const {
-      std::cout << s << "ParallaxAngleSingleAnchorProjectionFactor, z = ";
+      std::cout << s << "ParallaxAngleMainAnchorProjectionFactor, z = ";
       measured_.print();
       if(this->body_P_sensor_)
         this->body_P_sensor_->print("  sensor pose in body frame: ");
@@ -253,9 +253,8 @@ namespace gtsam {
         if (Dmain )  *Dmain  = zeros(2,6);
         if (Dpoint)  *Dpoint = zeros(2,2);
         if (verboseCheirality_)
-          std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key2()) <<
-              " with single anchor (" << DefaultKeyFormatter(this->key1()) << ")" <<
-              " moved behind camera " << std::endl;
+          std::cout << e.what() << ": Landmark " << DefaultKeyFormatter(this->key2()) <<
+            " moved behind main anchor camera " << DefaultKeyFormatter(this->key1()) << std::endl;
         if (throwCheirality_)
           throw e;
       }
@@ -380,9 +379,8 @@ namespace gtsam {
         if (Dmain )  *Dmain  = zeros(2,6);
         if (Dpoint)  *Dpoint = zeros(2,3);
         if (verboseCheirality_)
-          std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key2()) <<
-              " with single anchor (" << DefaultKeyFormatter(this->key1()) << ")" <<
-              " moved behind camera " << std::endl;
+          std::cout << e.what() << ": Landmark " << DefaultKeyFormatter(this->key2()) <<
+            " moved behind main anchor camera " << DefaultKeyFormatter(this->key1()) << std::endl;
         if (throwCheirality_)
           throw e;
       }
@@ -445,7 +443,7 @@ namespace gtsam {
    * @addtogroup SLAM
    */
   template<class POSE, class LANDMARK, class CALIBRATION = Cal3_S2>
-  class ParallaxAngleOnlyAnchorsProjectionFactor: public NoiseModelFactor3<POSE, POSE, LANDMARK> {
+  class ParallaxAngleAssoAnchorProjectionFactor: public NoiseModelFactor3<POSE, POSE, LANDMARK> {
   protected:
 
     // Keep a copy of measurement and calibration for I/O
@@ -463,13 +461,13 @@ namespace gtsam {
     typedef NoiseModelFactor3<POSE, POSE, LANDMARK> Base;
 
     /// shorthand for this class
-    typedef ParallaxAngleOnlyAnchorsProjectionFactor<POSE, LANDMARK, CALIBRATION> This;
+    typedef ParallaxAngleAssoAnchorProjectionFactor<POSE, LANDMARK, CALIBRATION> This;
 
     /// shorthand for a smart pointer to a factor
     typedef boost::shared_ptr<This> shared_ptr;
 
     /// Default constructor
-    ParallaxAngleOnlyAnchorsProjectionFactor() : throwCheirality_(false), verboseCheirality_(false) {}
+    ParallaxAngleAssoAnchorProjectionFactor() : throwCheirality_(false), verboseCheirality_(false) {}
 
     /**
      * Constructor
@@ -482,7 +480,7 @@ namespace gtsam {
      * @param K shared pointer to the constant calibration
      * @param body_P_sensor is the transform from body to sensor frame (default identity)
      */
-    ParallaxAngleOnlyAnchorsProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
+    ParallaxAngleAssoAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
         Key mainAnchorKey, Key associatedAnchorKey, Key pointKey,
         const boost::shared_ptr<CALIBRATION>& K,
         boost::optional<POSE> body_P_sensor = boost::none) :
@@ -503,7 +501,7 @@ namespace gtsam {
      * @param verboseCheirality determines whether exceptions are printed for Cheirality
      * @param body_P_sensor is the transform from body to sensor frame  (default identity)
      */
-    ParallaxAngleOnlyAnchorsProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
+    ParallaxAngleAssoAnchorProjectionFactor(const Point2& measured, const SharedNoiseModel& model,
         Key mainAnchorKey, Key associatedAnchorKey, Key pointKey,
         const boost::shared_ptr<CALIBRATION>& K,
         bool throwCheirality, bool verboseCheirality,
@@ -513,7 +511,7 @@ namespace gtsam {
           throwCheirality_(throwCheirality), verboseCheirality_(verboseCheirality) {}
 
     /** Virtual destructor */
-    virtual ~ParallaxAngleOnlyAnchorsProjectionFactor() {}
+    virtual ~ParallaxAngleAssoAnchorProjectionFactor() {}
 
     /// @return a deep copy of this factor
     virtual gtsam::NonlinearFactor::shared_ptr clone() const {
@@ -526,7 +524,7 @@ namespace gtsam {
      * @param keyFormatter optional formatter useful for printing Symbols
      */
     void print(const std::string& s = "", const KeyFormatter& keyFormatter = DefaultKeyFormatter) const {
-      std::cout << s << "ParallaxAngleOnlyAnchorsProjectionFactor, z = ";
+      std::cout << s << "ParallaxAngleAssoAnchorProjectionFactor, z = ";
       measured_.print();
       if(this->body_P_sensor_)
         this->body_P_sensor_->print("  sensor pose in body frame: ");
@@ -690,9 +688,10 @@ namespace gtsam {
         if (Dasso )  *Dasso  = zeros(2,6);
         if (Dpoint)  *Dpoint = zeros(2,3);
         if (verboseCheirality_)
-          std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key3()) <<
-              " with anchors (" << DefaultKeyFormatter(this->key1()) << "," << DefaultKeyFormatter(this->key2()) << ")" <<
-              " moved behind camera " << DefaultKeyFormatter(this->key2()) << std::endl;
+          std::cout << e.what() << ": Landmark " << DefaultKeyFormatter(this->key3())
+                    << " with main anchor " << DefaultKeyFormatter(this->key1())
+                    << " moved behind associated camera anchor " << DefaultKeyFormatter(this->key2())
+                    << std::endl;
         if (throwCheirality_)
           throw e;
       }
@@ -1023,9 +1022,11 @@ namespace gtsam {
         if (Dothe )  *Dothe  = zeros(2,6);
         if (Dpoint)  *Dpoint = zeros(2,3);
         if (verboseCheirality_)
-          std::cout << e.what() << ": Landmark "<< DefaultKeyFormatter(this->key4()) <<
-              " with anchors (" << DefaultKeyFormatter(this->key1()) << "," << DefaultKeyFormatter(this->key2()) << ")" <<
-              " moved behind camera " << DefaultKeyFormatter(this->key3()) << std::endl;
+          std::cout << e.what() << ": Landmark " << DefaultKeyFormatter(this->key4())
+                    << " with main anchor " << DefaultKeyFormatter(this->key1())
+                    << " and associated anchor " << DefaultKeyFormatter(this->key2())
+                    << " moved behind camera " << DefaultKeyFormatter(this->key3())
+                    << std::endl;
         if (throwCheirality_)
           throw e;
       }

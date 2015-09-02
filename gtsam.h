@@ -2277,15 +2277,15 @@ typedef gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3D
 
 #include <gtsam/slam/ParallaxAngleProjectionFactor.h>
 template<POSE, LANDMARK, CALIBRATION>
-virtual class ParallaxAngleSingleAnchorProjectionFactor : gtsam::NoiseModelFactor {
-  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+virtual class ParallaxAngleMainAnchorProjectionFactor : gtsam::NoiseModelFactor {
+  ParallaxAngleMainAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
     size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k);
-  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleMainAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
     size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, const POSE& body_P_sensor);
 
-  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleMainAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
       size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality);
-  ParallaxAngleSingleAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleMainAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
       size_t mainAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
       const POSE& body_P_sensor);
 
@@ -2301,22 +2301,22 @@ virtual class ParallaxAngleSingleAnchorProjectionFactor : gtsam::NoiseModelFacto
   // enabling serialization functionality
   void serialize() const;
 };
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3_S2> PAPoint2SingleAnchorProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3DS2> PAPoint2SingleAnchorProjectionFactorCal3DS2;
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3SingleAnchorProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleSingleAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3SingleAnchorProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleMainAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3_S2> PAPoint2MainAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleMainAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint2, gtsam::Cal3DS2> PAPoint2MainAnchorProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleMainAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3MainAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleMainAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3MainAnchorProjectionFactorCal3DS2;
 
 
 template<POSE, LANDMARK, CALIBRATION>
-virtual class ParallaxAngleOnlyAnchorsProjectionFactor : gtsam::NoiseModelFactor {
-  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+virtual class ParallaxAngleAssoAnchorProjectionFactor : gtsam::NoiseModelFactor {
+  ParallaxAngleAssoAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
     size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k);
-  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleAssoAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
     size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, const POSE& body_P_sensor);
 
-  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleAssoAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
       size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality);
-  ParallaxAngleOnlyAnchorsProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
+  ParallaxAngleAssoAnchorProjectionFactor(const gtsam::Point2& measured, const gtsam::noiseModel::Base* noiseModel,
       size_t mainAnchorKey, size_t associatedAnchorKey, size_t pointKey, const CALIBRATION* k, bool throwCheirality, bool verboseCheirality,
       const POSE& body_P_sensor);
 
@@ -2333,8 +2333,8 @@ virtual class ParallaxAngleOnlyAnchorsProjectionFactor : gtsam::NoiseModelFactor
   // enabling serialization functionality
   void serialize() const;
 };
-typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3OnlyAnchorsProjectionFactorCal3_S2;
-typedef gtsam::ParallaxAngleOnlyAnchorsProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3OnlyAnchorsProjectionFactorCal3DS2;
+typedef gtsam::ParallaxAngleAssoAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3_S2> PAPoint3AssoAnchorProjectionFactorCal3_S2;
+typedef gtsam::ParallaxAngleAssoAnchorProjectionFactor<gtsam::Pose3, gtsam::ParallaxAnglePoint3, gtsam::Cal3DS2> PAPoint3AssoAnchorProjectionFactorCal3DS2;
 
 
 template<POSE, LANDMARK, CALIBRATION>
