@@ -45,22 +45,22 @@ void ParallaxAnglePoint3::print(const string& s) const {
 
 /* ************************************************************************* */
 bool ParallaxAnglePoint3::equals(const ParallaxAnglePoint3 & q, double tol) const {
-  return (fabs(yaw_      - q.yaw()     ) < tol &&
-          fabs(pitch_    - q.pitch()   ) < tol &&
+  return (fabs(pitch_    - q.pitch()   ) < tol &&
+          fabs(yaw_      - q.yaw()     ) < tol &&
           fabs(parallax_ - q.parallax()) < tol);
 }
 
 /* ************************************************************************* */
 ParallaxAnglePoint3 ParallaxAnglePoint3::operator+(const ParallaxAnglePoint3& q) const {
-  return ParallaxAnglePoint3(yaw_      + q.yaw_,
-                             pitch_    + q.pitch_,
+  return ParallaxAnglePoint3(pitch_    + q.pitch_,
+                             yaw_      + q.yaw_,
                              parallax_ + q.parallax_);
 }
 
 /* ************************************************************************* */
 ParallaxAnglePoint3 ParallaxAnglePoint3::operator-(const ParallaxAnglePoint3& q) const {
-  return ParallaxAnglePoint3(yaw_      - q.yaw_,
-                             pitch_    - q.pitch_,
+  return ParallaxAnglePoint3(pitch_    - q.pitch_,
+                             yaw_      - q.yaw_,
                              parallax_ - q.parallax_);
 }
 
