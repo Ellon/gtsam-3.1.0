@@ -1718,6 +1718,8 @@ class NonlinearFactorGraph {
   // Ordering* orderingCOLAMDConstrained(const gtsam::Values& c, const std::map<gtsam::Key,int>& constraints) const;
   gtsam::GaussianFactorGraph* linearize(const gtsam::Values& values) const;
   gtsam::NonlinearFactorGraph clone() const;
+  void saveGraph(string s) const;
+  void saveGraph(string s, const gtsam::Values& values) const;
 
   // enabling serialization functionality
   void serialize() const;
