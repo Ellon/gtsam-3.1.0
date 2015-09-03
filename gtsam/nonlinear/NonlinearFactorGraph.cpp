@@ -1,6 +1,6 @@
 /* ----------------------------------------------------------------------------
 
- * GTSAM Copyright 2010, Georgia Tech Research Corporation, 
+ * GTSAM Copyright 2010, Georgia Tech Research Corporation,
  * Atlanta, Georgia 30332-0415
  * All Rights Reserved
  * Authors: Frank Dellaert, et al. (see THANKS for the full author list)
@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <limits>
+#include <fstream>
 #include <boost/foreach.hpp>
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/geometry/Pose3.h>
@@ -58,6 +59,16 @@ void NonlinearFactorGraph::print(const std::string& str, const KeyFormatter& key
 /* ************************************************************************* */
 bool NonlinearFactorGraph::equals(const NonlinearFactorGraph& other, double tol) const {
   return Base::equals(other, tol);
+}
+
+/* ************************************************************************* */
+void NonlinearFactorGraph::saveGraph(const std::string &s, const Values& values,
+    const GraphvizFormatting& graphvizFormatting,
+    const KeyFormatter& keyFormatter) const
+{
+  std::ofstream of(s.c_str());
+  saveGraph(of,values,graphvizFormatting,keyFormatter);
+  of.close();
 }
 
 /* ************************************************************************* */

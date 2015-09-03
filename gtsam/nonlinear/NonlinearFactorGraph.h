@@ -1,6 +1,6 @@
 /* ----------------------------------------------------------------------------
 
- * GTSAM Copyright 2010, Georgia Tech Research Corporation, 
+ * GTSAM Copyright 2010, Georgia Tech Research Corporation,
  * Atlanta, Georgia 30332-0415
  * All Rights Reserved
  * Authors: Frank Dellaert, et al. (see THANKS for the full author list)
@@ -62,7 +62,7 @@ namespace gtsam {
    * A non-linear factor graph is a graph of non-Gaussian, i.e. non-linear factors,
    * which derive from NonlinearFactor. The values structures are typically (in SAM) more general
    * than just vectors, e.g., Rot3 or Pose3, which are objects in non-linear manifolds.
-   * Linearizing the non-linear factor graph creates a linear factor graph on the 
+   * Linearizing the non-linear factor graph creates a linear factor graph on the
    * tangent vector space at the linearization point. Because the tangent space is a true
    * vector space, the config type will be an VectorValues in that linearized factor graph.
    */
@@ -94,6 +94,11 @@ namespace gtsam {
 
     /** Test equality */
     bool equals(const NonlinearFactorGraph& other, double tol = 1e-9) const;
+
+    /** Write the graph in GraphViz format for visualization */
+    void saveGraph(const std::string& str, const Values& values = Values(),
+      const GraphvizFormatting& graphvizFormatting = GraphvizFormatting(),
+      const KeyFormatter& keyFormatter = DefaultKeyFormatter) const;
 
     /** Write the graph in GraphViz format for visualization */
     void saveGraph(std::ostream& stm, const Values& values = Values(),
