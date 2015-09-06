@@ -1,6 +1,8 @@
 
 #include "ParallaxAnglePointTools.h"
 
+#include <gtsam/geometry/Point3.h>
+
 using namespace std;
 
 namespace gtsam {
@@ -71,35 +73,54 @@ double vectors2angle(
 {
   if(!ANG_v1 && !ANG_v2)
   {
-    return acos( v1.dot(v2)/(v1.norm()*v2.norm()) );
+    double aux = v1.dot(v2)/(v1.norm()*v2.norm());
+
+    // Guard to avoid rounding errors
+    if (aux < -1.0) aux = -1.0 ;
+    else if (aux > 1.0) aux = 1.0 ;
+
+    return acos( aux );
   }
 
-  Matrix DOTPROD_v1(1,3), DOTPROD_v2(1,3);
-  double dotprod = dot(v1,v2,DOTPROD_v1,DOTPROD_v2);
-  Matrix NORMV1_v1(1,3), NORMV2_v2(1,3);
-  double normv1 = norm(v1,NORMV1_v1);
-  double normv2 = norm(v2,NORMV2_v2);
+  Matrix V1NORMED_v1, V2NORMED_v2;
+  Vector v1normed = Point3(v1).normalize(V1NORMED_v1).vector();
+  Vector v2normed = Point3(v2).normalize(V2NORMED_v2).vector();
 
-  double aux = dotprod/(normv1*normv2);
-  Matrix AUX_v1 = (normv1*DOTPROD_v1 - dotprod*NORMV1_v1) / (normv2*normv1*normv1);
-  Matrix AUX_v2 = (normv2*DOTPROD_v2 - dotprod*NORMV2_v2) / (normv1*normv2*normv2);
+  Matrix DOTPROD_v1normed(1,3), DOTPROD_v2normed(1,3);
+  double dotprod = dot(v1normed, v2normed, DOTPROD_v1normed, DOTPROD_v2normed);
 
-  double ang = acos(aux);
-  double ANG_aux = -1.0/sqrt(1.0 - aux*aux);
+  Matrix DOTPROD_v1 = DOTPROD_v1normed * V1NORMED_v1;
+  Matrix DOTPROD_v2 = DOTPROD_v2normed * V2NORMED_v2;
+
+  double ANG_dotprod;
+
+  // Guard against nonlinearity on the derivate of acos
+  if(1.0 - dotprod*dotprod < 1e-6)
+  {
+    ANG_dotprod = -1.0/1e-6;
+  }
+  else
+  {
+    ANG_dotprod = -1.0/sqrt(1.0 - dotprod*dotprod);
+  }
 
   if(ANG_v1)
   {
     ANG_v1->resize(1,3);
-    *ANG_v1 << ANG_aux*AUX_v1;
+    *ANG_v1 << ANG_dotprod*DOTPROD_v1;
   }
 
   if(ANG_v2)
   {
     ANG_v2->resize(1,3);
-    *ANG_v2 << ANG_aux*AUX_v2;
+    *ANG_v2 << ANG_dotprod*DOTPROD_v2;
   }
 
-  return ang;
+  // Guard to avoid rounding errors
+  if (dotprod < -1.0) dotprod = -1.0 ;
+  else if (dotprod > 1.0) dotprod = 1.0 ;
+
+  return acos( dotprod );
 
 }
 
