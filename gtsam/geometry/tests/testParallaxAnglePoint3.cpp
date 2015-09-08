@@ -119,9 +119,9 @@ namespace {
   Point3 assoAnchor(0, -5, 5);
   Point3 otheAnchor(7,  0, 0);
   ParallaxAnglePoint3 p(0, radians(90.0), radians(45.0));
-  Vector expectedVecFromMain = (-mainAnchor.vector()).normalized();
-  Vector expectedVecFromAsso = (-assoAnchor.vector()).normalized();
-  Vector expectedVecFromOthe = (-otheAnchor.vector()).normalized();
+  Vector expectedNormedVecFromMain = (-mainAnchor.vector()).normalized();
+  Vector expectedNormedVecFromAsso = (-assoAnchor.vector()).normalized();
+  Vector expectedNormedVecFromOthe = (-otheAnchor.vector()).normalized();
 
   Matrix eVECFROMMAIN_point = (Matrix(3,3) <<
                          0,    -1.000000000000000e+00,                         0,
@@ -171,11 +171,11 @@ namespace {
 TEST(ParallaxAnglePoint3, directionVectorFromMainAnchor) {
 
   // simple call
-  EXPECT(assert_equal(expectedVecFromMain, p.directionVectorFromMainAnchor()));
+  EXPECT(assert_equal(expectedNormedVecFromMain, p.directionVectorFromMainAnchor()));
 
   // With jacobian
   Matrix VECFROMMAIN_point;
-  EXPECT(assert_equal(expectedVecFromMain, p.directionVectorFromMainAnchor(VECFROMMAIN_point)));
+  EXPECT(assert_equal(expectedNormedVecFromMain, p.directionVectorFromMainAnchor(VECFROMMAIN_point)));
   EXPECT(assert_equal(eVECFROMMAIN_point, VECFROMMAIN_point ));
 
 }
@@ -184,11 +184,11 @@ TEST(ParallaxAnglePoint3, directionVectorFromMainAnchor) {
 TEST(ParallaxAnglePoint3, directionVectorFromAssoAnchor) {
 
   // simple call
-  EXPECT(assert_equal(expectedVecFromAsso, p.directionVectorFromAssoAnchor(mainAnchor,assoAnchor).normalized()));
+  EXPECT(assert_equal(expectedNormedVecFromAsso, p.directionVectorFromAssoAnchor(mainAnchor,assoAnchor).normalized()));
 
   // With jacobian
   Matrix VECFROMASSO_point, VECFROMASSO_main, VECFROMASSO_asso;
-  EXPECT(assert_equal(expectedVecFromAsso, p.directionVectorFromAssoAnchor(mainAnchor,assoAnchor, VECFROMASSO_point, VECFROMASSO_main, VECFROMASSO_asso).normalized()));
+  EXPECT(assert_equal(expectedNormedVecFromAsso, p.directionVectorFromAssoAnchor(mainAnchor,assoAnchor, VECFROMASSO_point, VECFROMASSO_main, VECFROMASSO_asso).normalized()));
 
   EXPECT(assert_equal(eVECFROMASSO_point, VECFROMASSO_point ));
   EXPECT(assert_equal(eVECFROMASSO_main,  VECFROMASSO_main  ));
@@ -199,11 +199,11 @@ TEST(ParallaxAnglePoint3, directionVectorFromAssoAnchor) {
 TEST(ParallaxAnglePoint3, directionVectorFromOtheAnchor) {
 
   // simple call
-  EXPECT(assert_equal(expectedVecFromOthe, p.directionVectorFromOtheAnchor(mainAnchor,assoAnchor,otheAnchor).normalized()));
+  EXPECT(assert_equal(expectedNormedVecFromOthe, p.directionVectorFromOtheAnchor(mainAnchor,assoAnchor,otheAnchor).normalized()));
 
   // With jacobian
   Matrix VECFROMOTHE_point, VECFROMOTHE_main, VECFROMOTHE_asso, VECFROMOTHE_othe;
-  EXPECT(assert_equal(expectedVecFromOthe, p.directionVectorFromOtheAnchor(mainAnchor,assoAnchor,otheAnchor, VECFROMOTHE_point, VECFROMOTHE_main, VECFROMOTHE_asso, VECFROMOTHE_othe).normalized()));
+  EXPECT(assert_equal(expectedNormedVecFromOthe, p.directionVectorFromOtheAnchor(mainAnchor,assoAnchor,otheAnchor, VECFROMOTHE_point, VECFROMOTHE_main, VECFROMOTHE_asso, VECFROMOTHE_othe).normalized()));
 
   EXPECT(assert_equal(eVECFROMOTHE_point, VECFROMOTHE_point ));
   EXPECT(assert_equal(eVECFROMOTHE_main,  VECFROMOTHE_main  ));
