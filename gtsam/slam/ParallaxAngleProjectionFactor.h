@@ -198,16 +198,18 @@ namespace gtsam {
 
           Point2 reprojectionError = pi - measured_;
 
+          Matrix PI_pc = PI_pn * PN_pc;
+
           // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PI_pn * PN_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
+            *Dmain << PI_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,2);
-            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
+            *Dpoint << PI_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -233,16 +235,18 @@ namespace gtsam {
 
           Point2 reprojectionError = pi - measured_;
 
+          Matrix PI_pc = PI_pn * PN_pc;
+
           // Chain of jacobians
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PI_pn * PN_pc * PC_mainpose;
+            *Dmain << PI_pc * PC_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,2);
-            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
+            *Dpoint << PI_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -327,15 +331,16 @@ namespace gtsam {
           Point2 reprojectionError = pi - measured_;
 
           // Chain of jacobians
+          Matrix PI_pc = PI_pn * PN_pc;
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PI_pn * PN_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
+            *Dmain << PI_pc * PC_maincamerapose * MAINCAMERAPOSE_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
+            *Dpoint << PI_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
@@ -360,15 +365,16 @@ namespace gtsam {
           Point2 reprojectionError = pi - measured_;
 
           // Chain of jacobians
+          Matrix PI_pc = PI_pn * PN_pc;
           if(Dmain)
           {
             Dmain->resize(2,6);
-            *Dmain << PI_pn * PN_pc * PC_mainpose;
+            *Dmain << PI_pc * PC_mainpose;
           }
           if(Dpoint)
           {
             Dpoint->resize(2,3);
-            *Dpoint << PI_pn * PN_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
+            *Dpoint << PI_pc * PC_dirmaintopoint * DIRMAINTOPOINT_point;
           }
 
           return reprojectionError.vector();
