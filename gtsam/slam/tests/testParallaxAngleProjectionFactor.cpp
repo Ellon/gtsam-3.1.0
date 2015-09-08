@@ -88,7 +88,7 @@ TEST( ParallaxAngleProjectionToMainFactor, Equals ) {
   TestProjectionToMainFactor factor1(measurement, model, X(1), L(1), K);
   TestProjectionToMainFactor factor2(measurement, model, X(1), L(1), K);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -100,7 +100,7 @@ TEST( ParallaxAngleProjectionToMainFactor, EqualsWithTransform ) {
   TestProjectionToMainFactor factor1(measurement, model, X(1), L(1), K, body_P_sensor);
   TestProjectionToMainFactor factor2(measurement, model, X(1), L(1), K, body_P_sensor);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -123,7 +123,7 @@ TEST( ParallaxAngleProjectionToMainFactor, Error ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 }
 
 /* ************************************************************************* */
@@ -149,7 +149,7 @@ TEST( ParallaxAngleProjectionToMainFactor, ErrorWithTransform ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 }
 
 /* ************************************************************************* */
@@ -184,8 +184,8 @@ TEST( ParallaxAngleProjectionToMainFactor, Jacobian ) {
   CHECK(assert_equal(expectedError, actualError, 1e-9));
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_pose,  ERROR_pose,  1e-3));
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_pose,  ERROR_pose,  1e-3));
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 }
 
 /* ************************************************************************* */
@@ -223,8 +223,8 @@ TEST( ParallaxAngleProjectionToMainFactor, JacobianWithTransform ) {
   CHECK(assert_equal(expectedError, actualError, 1e-9));
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 }
 
 // ############################################################################
@@ -266,7 +266,7 @@ TEST( ParallaxAngleProjectionToAssoFactor, Equals ) {
   TestProjectionToAssoFactor factor1(measurement, model, X(1), X(2), L(1), K);
   TestProjectionToAssoFactor factor2(measurement, model, X(1), X(2), L(1), K);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -278,7 +278,7 @@ TEST( ParallaxAngleProjectionToAssoFactor, EqualsWithTransform ) {
   TestProjectionToAssoFactor factor1(measurement, model, X(1), X(2), L(1), K, body_P_sensor);
   TestProjectionToAssoFactor factor2(measurement, model, X(1), X(2), L(1), K, body_P_sensor);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -302,7 +302,7 @@ TEST( ParallaxAngleProjectionToAssoFactor, Error ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 }
 
 /* ************************************************************************* */
@@ -327,7 +327,7 @@ TEST( ParallaxAngleProjectionToAssoFactor, ErrorWithTransform ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 
 }
 
@@ -368,9 +368,9 @@ TEST( ParallaxAngleProjectionToAssoFactor, Jacobian ) {
   CHECK(assert_equal(expectedError, actualError, 1e-9));
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
-  EXPECT(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3));
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
+  CHECK(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3));
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 
 }
 
@@ -414,9 +414,9 @@ TEST( ParallaxAngleProjectionToAssoFactor, JacobianWithTransform ) {
   CHECK(assert_equal(expectedError, actualError, 1e-9));
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3)); // NOT_EQUAL
-  EXPECT(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3)); // NOT_EQUAL
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3)); // NOT_EQUAL
+  CHECK(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3)); // NOT_EQUAL
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 
 }
 
@@ -461,7 +461,7 @@ TEST( ParallaxAngleProjectionFactor, Equals ) {
   TestProjectionFactor factor1(measurement, model, X(1), X(2), X(3), L(1), K);
   TestProjectionFactor factor2(measurement, model, X(1), X(2), X(3), L(1), K);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -473,7 +473,7 @@ TEST( ParallaxAngleProjectionFactor, EqualsWithTransform ) {
   TestProjectionFactor factor1(measurement, model, X(1), X(2), X(3), L(1), K, body_P_sensor);
   TestProjectionFactor factor2(measurement, model, X(1), X(2), X(3), L(1), K, body_P_sensor);
 
-  EXPECT(assert_equal(factor1, factor2));
+  CHECK(assert_equal(factor1, factor2));
 }
 
 /* ************************************************************************* */
@@ -499,7 +499,7 @@ TEST( ParallaxAngleProjectionFactor, Error ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 }
 
 // /* ************************************************************************* */
@@ -526,7 +526,7 @@ TEST( ParallaxAngleProjectionFactor, ErrorWithTransform ) {
   Vector expectedError = (Vector(2) << -3.0, 0.0);
 
   // Verify we get the expected error
-  EXPECT(assert_equal(expectedError, actualError, 1e-9));
+  CHECK(assert_equal(expectedError, actualError, 1e-9));
 
 }
 
@@ -571,10 +571,10 @@ TEST( ParallaxAngleProjectionFactor, Jacobian ) {
   CHECK(assert_equal(expectedError, actualError, 1e-9));
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
-  EXPECT(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3));
-  EXPECT(assert_equal(eERROR_othepose,  ERROR_othepose,  1e-3));
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3));
+  CHECK(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3));
+  CHECK(assert_equal(eERROR_othepose,  ERROR_othepose,  1e-3));
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 
 }
 
@@ -621,10 +621,10 @@ TEST( ParallaxAngleProjectionFactor, JacobianWithTransform ) {
     -5.542560000000000e+02,     5.048709793414476e-29,     2.732693061776106e-29);
 
   // Verify the Jacobians are correct
-  EXPECT(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3)); // NOT_EQUAL
-  EXPECT(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3)); // NOT_EQUAL
-  EXPECT(assert_equal(eERROR_othepose,  ERROR_othepose,  1e-3)); // NOT_EQUAL
-  EXPECT(assert_equal(eERROR_point, ERROR_point, 1e-3));
+  CHECK(assert_equal(eERROR_mainpose,  ERROR_mainpose,  1e-3)); // NOT_EQUAL
+  CHECK(assert_equal(eERROR_assopose,  ERROR_assopose,  1e-3)); // NOT_EQUAL
+  CHECK(assert_equal(eERROR_othepose,  ERROR_othepose,  1e-3)); // NOT_EQUAL
+  CHECK(assert_equal(eERROR_point, ERROR_point, 1e-3));
 
 }
 
